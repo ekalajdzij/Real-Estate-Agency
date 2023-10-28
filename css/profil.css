@@ -1,0 +1,22 @@
+body {
+    background-color: #fdf1d3;
+}
+
+img {
+    padding: 25px;
+    width: 200px;
+    margin-bottom: 50px;
+}
+
+#profil{
+    padding: 25px;
+    display: grid;
+    grid-template-columns: repeat(2, 220px);
+    grid-template-rows: repeat(4, 35px);
+    gap: 30px;
+}
+
+#profil input {
+    padding: 5px;
+}
+

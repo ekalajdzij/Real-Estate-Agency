@@ -1,0 +1,38 @@
+#meni li {
+    display: inline-block;
+}
+
+body {
+    background-color: #fdf1d3;
+}
+
+#meni ul li {
+    margin-right: 20px;
+}
+
+#meni ul{
+    margin: 0;
+    padding: 5px 5px 5px 5px;
+    list-style: none;
+    align-content: center;
+}
+
+#meni {
+    position: fixed;
+    text-align: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+#meni a {
+    text-decoration: none;
+    color: blue;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+#meni a:hover {
+    color: #ff9900;
+}
