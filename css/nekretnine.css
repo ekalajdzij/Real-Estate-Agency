@@ -1,0 +1,58 @@
+body {
+    background-color: #fdf1d3;
+    padding: 10px;
+}
+.property-type {
+    font-size: 24px;
+    margin: 20px 0;
+}
+
+.property-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,300px);
+    gap: 20px;
+}
+
+.property {
+    margin: 10px;
+    background-color: white;
+    padding: 10px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+.property.stan{
+    background-color: white;
+}
+.property.kuca {
+    background-color: powderblue;
+}
+.property.posao {
+    background-color: green;
+}
+
+.property-image {
+    width: 100%;
+    max-height: 350px;
+}
+
+.property-details {
+    margin-top: 10px;
+}
+
+.property-name {
+    font-weight: bold;
+}
+
+.property-price {
+    text-align: right;
+}
+
+.details-button {
+    display: block;
+    margin: 10px auto;
+    text-align: center;
+    background-color: #007BFF;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    cursor: pointer;
+}
