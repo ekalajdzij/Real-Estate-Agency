@@ -1,12 +1,18 @@
 body {
     background-color: #fdf1d3;
-    padding: 5px;
+    padding: 10px;
+    
+}
+
+iframe {
+    width: 100%;
+    height: 40px;
+    border: none;
 }
 
 img {
     height: 400px;
     width: 800px;
-    justify-self: center;
 }
 
 h3 {

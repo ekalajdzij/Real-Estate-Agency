@@ -1,11 +1,25 @@
 body {
     background-color: #fdf1d3;
+    padding: 10px;
+   
 }
 
-img {
-    padding: 25px;
-    width: 200px;
-    margin-bottom: 50px;
+iframe {
+    width: 100%;
+    height: 40px;
+    border: none;
+}
+
+img{
+    padding: 20px;
+    width: 300px;
+    margin-bottom: 20px;
+}
+
+#profilePicture {
+    clear: both;
+    display: flex;
+    justify-content: center;
 }
 
 #profil{
@@ -14,6 +28,7 @@ img {
     grid-template-columns: repeat(2, 220px);
     grid-template-rows: repeat(4, 35px);
     gap: 30px;
+    justify-content: center;
 }
 
 #profil input {

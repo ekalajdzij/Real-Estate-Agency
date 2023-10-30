@@ -2,6 +2,11 @@ body {
     background-color: #fdf1d3;
     padding: 10px;
 }
+iframe {
+    width: 100%;
+    height: 40px;
+    border: none;
+}
 .property-type {
     font-size: 24px;
     margin: 20px 0;
@@ -9,15 +14,18 @@ body {
 
 .property-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit,300px);
+    grid-template-columns: repeat(auto-fit,minmax(300px, 1fr));
     gap: 20px;
 }
 
 .property {
     margin: 10px;
-    background-color: white;
-    padding: 10px;
+    width: 300px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
 }
 .property.stan{
     background-color: white;
@@ -30,29 +38,39 @@ body {
 }
 
 .property-image {
-    width: 100%;
+    width: 90%;
     max-height: 350px;
+    margin-top: 10px;
 }
 
 .property-details {
-    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    text-align: left;
+    width: 100%;
+    margin: 10px 10px;
 }
 
 .property-name {
     font-weight: bold;
+    width: 90%;
+}
+
+.property-area {
+    width: 90%;
 }
 
 .property-price {
     text-align: right;
+    width: 90%;
 }
 
-.details-button {
-    display: block;
-    margin: 10px auto;
-    text-align: center;
-    background-color: #007BFF;
-    color: white;
-    padding: 5px 10px;
-    border: none;
-    cursor: pointer;
+button {
+    width: 80%;
+    margin: auto 10px;
+    padding: 10px;
+    justify-self: center;
+    margin-top: 10px;
 }
