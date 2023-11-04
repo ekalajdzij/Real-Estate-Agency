@@ -1,0 +1,11 @@
+body {
+    background-color: #fdf1d3;
+    padding: 10px;
+    
+}
+
+iframe {
+    width: 100%;
+    height: 40px;
+    border: none;
+}
