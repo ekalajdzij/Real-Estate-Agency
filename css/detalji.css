@@ -46,9 +46,14 @@ h3 {
     padding: 20px; 
 }
 
-#upiti div {
+#upiti li {
     border: 1px solid black; 
     background-color: white;
     padding: 10px; 
     margin-bottom: 10px;
+    list-style: none;
+}
+#upiti ul{
+    margin: 0;
+    padding: 0;
 }
