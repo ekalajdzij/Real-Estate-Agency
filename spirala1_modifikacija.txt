@@ -1,0 +1,3 @@
+U css-u profil.css napravio sam dva media upita, jedan za ekran manji od 500px gdje sam sačuvao stari izgled profila, dok sam u media upitu za ekran veći od 500px napravio novi traženi izgled.
+U tom media upitu uradio sam float slike lijevo, te ažurirao veličinu.
+U gridu sam izbacio justify-content koji mi je centrirao elemente grida.

@@ -1,40 +1,79 @@
-body {
-    background-color: #fdf1d3;
-    padding: 10px;
-   
-}
 
-iframe {
-    top: 0;
-    position: fixed;
-    width: 100%;
-    height: 40px;
-    border: none;
-}
+    body {
+        background-color: #fdf1d3;
+        padding: 10px;
+       
+    }
+    
+    iframe {
+        top: 0;
+        position: fixed;
+        width: 100%;
+        height: 40px;
+        border: none;
+    }
+    
+    img{
+        margin-top: 20px;
+        padding: 20px;
+        width: 20%;
+        margin-bottom: 20px;
+    }
+    
+    #profilePicture {
+        clear: both;
+        display: flex;
+        justify-content: center;
+    }
+    
+    #profil{
+        padding: 25px;
+        display: grid;
+        grid-template-columns: repeat(2, 220px);
+        grid-template-rows: repeat(4, 35px);
+        gap: 30px;
+        justify-content: center;
+    }
+    
+    #profil input {
+        padding: 5px;
+    }
+    
 
-img{
-    margin-top: 20px;
-    padding: 20px;
-    width: 300px;
-    margin-bottom: 20px;
-}
 
-#profilePicture {
-    clear: both;
-    display: flex;
-    justify-content: center;
+@media (min-width: 500px) {
+    body {
+        background-color: #fdf1d3;
+        padding: 10px;
+       
+    }
+    
+    iframe {
+        top: 0;
+        position: fixed;
+        width: 100%;
+        height: 40px;
+        border: none;
+    }
+    
+    img{
+        float: left;
+        margin-top: 20px;
+        width: 15%;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 50px;
+    }
+    
+    #profil{
+        padding: 25px;
+        display: grid;
+        grid-template-columns: repeat(2, 220px);
+        grid-template-rows: repeat(4, 35px);
+        gap: 30px;
+    }
+    #profil input {
+        padding: 5px;
+    }
+    
 }
-
-#profil{
-    padding: 25px;
-    display: grid;
-    grid-template-columns: repeat(2, 220px);
-    grid-template-rows: repeat(4, 35px);
-    gap: 30px;
-    justify-content: center;
-}
-
-#profil input {
-    padding: 5px;
-}
-
