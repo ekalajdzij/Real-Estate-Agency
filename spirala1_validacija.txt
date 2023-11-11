@@ -1,0 +1,3 @@
+Validaciju sam uradio prije dodatnog zadatka.
+Za html validaciju korišten je: https://validator.w3.org/nu/#file.
+Za css validaciju korišten je: https://jigsaw.w3.org/css-validator/.
