@@ -1,8 +1,6 @@
 import { SpisakNekretnina } from "./SpisakNekretnina.js";
 function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
-    let filtriraneNekretnine = instancaModula.filtrirajNekretnine({ tip_nekretnine: tip_nekretnine });
-
-    filtriraneNekretnine = instancaModula.filtrirajNekretnine({min_kvadratura: 100, tip_nekretnine: tip_nekretnine});
+    const filtriraneNekretnine = instancaModula.filtrirajNekretnine({ tip_nekretnine: tip_nekretnine });
 
     divReferenca.innerHTML = "";
     divReferenca.classList.add('property-type');
@@ -106,6 +104,26 @@ const listaNekretnina = [{
 },
 {
     id: 4,
+    tip_nekretnine: "Kuca",
+    naziv: "Useljiv stan Sarajevo",
+    kvadratura: 158,
+    cijena: 232000,
+    tip_grijanja: "plin",
+    lokacija: "Novo Sarajevo",
+    godina_izgradnje: 2019,
+    datum_objave: "01.10.2023.",
+    opis: "Sociis natoque penatibus.",
+    upiti: [{
+        korisnik_id: 1,
+        tekst_upita: "Nullam eu pede mollis pretium."
+    },
+    {
+        korisnik_id: 2,
+        tekst_upita: "Phasellus viverra nulla."
+    }]
+},
+{
+    id: 5,
     tip_nekretnine: "Poslovni prostor",
     naziv: "Mali poslovni prostor",
     kvadratura: 20,
