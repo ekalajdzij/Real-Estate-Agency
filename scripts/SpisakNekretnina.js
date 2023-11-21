@@ -52,4 +52,3 @@ let SpisakNekretnina = function () {
         ucitajDetaljeNekretnine: ucitajDetaljeNekretnine
     }
 };
-export {SpisakNekretnina};
