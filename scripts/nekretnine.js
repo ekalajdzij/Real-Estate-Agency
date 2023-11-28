@@ -27,7 +27,7 @@ function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
         }
         nekretninaElement.innerHTML = `
         <div class="property-details">
-        <img class="property-image" src="https://hips.hearstapps.com/hmg-prod/images/beautiful-sunny-forest-wild-nature-outdoor-travel-royalty-free-image-1576784717.jpg" alt="Poslovni prostor 1">
+        <img class="property-image" src="https://hips.hearstapps.com/hmg-prod/images/beautiful-sunny-forest-wild-nature-outdoor-travel-royalty-free-image-1576784717.jpg">
             <div class="property-name">${nekretnina.naziv}</div>
             <div class="property-area">Kvadratura: ${nekretnina.kvadratura} m2</div>
             <div class="property-price">Cijena: ${nekretnina.cijena} BAM</div>
