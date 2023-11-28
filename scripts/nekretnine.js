@@ -1,6 +1,8 @@
 function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
     const filtriraneNekretnine = instancaModula.filtrirajNekretnine({ tip_nekretnine: tip_nekretnine });
 
+    if (!divReferenca) return;
+
     divReferenca.innerHTML = "";
     divReferenca.classList.add('property-type');
 
