@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="hr">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <link rel="stylesheet" type="text/css" href="../css/prijava.css">
+        <title>Prijava</title>
+    </head>
+    <body>
+        <iframe style="margin: 0;" src="meni.html"></iframe>
+        <div class="login-page">
+            <div class="form">
+                <form class="login-form" id="form-prijava" action="/login" method="post">
+                    <input type="text" placeholder="username" name="username" />
+                    <input type="password" placeholder="password" name="password" />
+                    <button type="submit" onclick="prijava(); return false;">Prijava</button>
+                </form>
+            </div>
+        </div>
+        <script>"../index.js"</script>
+        <script>
+            function prijava() {
+                var username = document.getElementById('form-prijava').elements['username'].value;
+                var password = document.getElementById('form-prijava').elements['password'].value;
+
+                var jsonData = {
+                    username: username,
+                    password: password
+                };
+
+                fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                    })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.poruka); 
+                })
+                .catch(error => console.error('Greška prilikom prijave:', error));
+                }
+        </script>
+    </body>
+    
+</html>

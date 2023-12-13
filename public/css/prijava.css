@@ -1,0 +1,40 @@
+body {
+    background-color: #fdf1d3;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 50vh; /* Dodano za centriranje na cijelom ekranu */
+}
+
+iframe {
+    top: 0;
+    position: fixed;
+    width: 100%;
+    height: 40px;
+    border: none;
+}
+
+.login-page {
+    margin-top: 20px; /* Prilagodite po potrebi */
+}
+
+.form {
+    text-align: center;
+}
+
+.login-form button {
+    border-radius: 12px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.login-form input,
+.login-form button {
+    margin-bottom: 10px;
+}

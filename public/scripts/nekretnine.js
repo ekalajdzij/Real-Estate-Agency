@@ -1,5 +1,30 @@
-function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
-    const filtriraneNekretnine = instancaModula.filtrirajNekretnine({ tip_nekretnine: tip_nekretnine });
+const divStan = document.getElementById("stan");
+const divKuca = document.getElementById("kuca");
+const divPp = document.getElementById("pp");
+
+PoziviAjax.getNekretnine((errorNekretnine, dataNekretnine) => {
+    if (errorNekretnine) {
+        console.error('Greška prilikom dohvata nekretnina:', errorNekretnine);
+        return;
+    }
+
+    PoziviAjax.getKorisnik((errorKorisnik, dataKorisnik) => {
+        if (errorKorisnik) {
+            console.error('Greška prilikom dohvata korisnika:', errorKorisnik);
+            return;
+        }
+
+        const listaNekretnina = dataNekretnine;
+        const listaKorisnika = dataKorisnik;
+
+        spojiNekretnine(divStan, listaNekretnina, listaKorisnika, "Stan");
+        spojiNekretnine(divKuca, listaNekretnina, listaKorisnika, "Kuca");
+        spojiNekretnine(divPp, listaNekretnina, listaKorisnika, "Poslovni prostor");
+    });
+});
+
+function spojiNekretnine(divReferenca, listaNekretnina, listaKorisnika, tip_nekretnine) {
+    const filtriraneNekretnine = listaNekretnina.filter(nekretnina => nekretnina.tip_nekretnine === tip_nekretnine);
 
     if (!divReferenca) return;
 
@@ -25,24 +50,33 @@ function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
         } else if (tip_nekretnine == "Poslovni prostor") {
             nekretninaElement.classList.add("property-posao")
         }
+        
+        if (Array.isArray(listaKorisnika)) {const korisnik = listaKorisnika.find(user => user.id === nekretnina.upiti[0].korisnik_id);}
+        else korisnik = listaKorisnika;
+
         nekretninaElement.innerHTML = `
-        <div class="property-details">
-        <img class="property-image" src="https://hips.hearstapps.com/hmg-prod/images/beautiful-sunny-forest-wild-nature-outdoor-travel-royalty-free-image-1576784717.jpg">
-            <div class="property-name">${nekretnina.naziv}</div>
-            <div class="property-area">Kvadratura: ${nekretnina.kvadratura} m2</div>
-            <div class="property-price">Cijena: ${nekretnina.cijena} BAM</div>
-            <button type="button">Detalji</button>
-        </div>
+            <div class="property-details">
+                <img class="property-image" src="https://hips.hearstapps.com/hmg-prod/images/beautiful-sunny-forest-wild-nature-outdoor-travel-royalty-free-image-1576784717.jpg">
+                <div class="property-name">${nekretnina.naziv}</div>
+                <div class="property-area">Kvadratura: ${nekretnina.kvadratura} m2</div>
+                <div class="property-price">Cijena: ${nekretnina.cijena} BAM</div>
+                <div class="property-user">Vlasnik: ${korisnik ? korisnik.ime : 'Nepoznat'}</div>
+                <button type="button">Detalji</button>
+            </div>
         `;
 
         propertyList.appendChild(nekretninaElement);
     });
 }
 
-const divStan = document.getElementById("stan");
-const divKuca = document.getElementById("kuca");
-const divPp = document.getElementById("pp");
+/*let nekretnine = SpisakNekretnina();
+nekretnine.init(listaKorisnika, listaNekretnina);
 
+spojiNekretnine(divStan, nekretnine, "Stan");
+spojiNekretnine(divKuca, nekretnine, "Kuca");
+spojiNekretnine(divPp, nekretnine, "Poslovni prostor");*/
+
+/*
 const listaNekretnina = [{
     id: 1,
     tip_nekretnine: "Stan",
@@ -141,6 +175,7 @@ const listaNekretnina = [{
     ]
 }]
 
+
 const listaKorisnika = [{
     id: 1,
     ime: "Neko",
@@ -154,10 +189,6 @@ const listaKorisnika = [{
     username: "username2",
 }]
 
+*/
 
-let nekretnine = SpisakNekretnina();
-nekretnine.init(listaNekretnina, listaKorisnika);
 
-spojiNekretnine(divStan, nekretnine, "Stan");
-spojiNekretnine(divKuca, nekretnine, "Kuca");
-spojiNekretnine(divPp, nekretnine, "Poslovni prostor");
