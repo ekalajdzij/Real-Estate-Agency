@@ -18,9 +18,11 @@
         padding: 20px;
         width: 20%;
         margin-bottom: 20px;
+        height: 100%;
     }
     
     #profilePicture {
+        margin-top: 75px;
         clear: both;
         display: flex;
         justify-content: center;
@@ -64,6 +66,11 @@
         padding: 20px;
         margin-bottom: 20px;
         border: 50px;
+    }
+
+    #profilePicture {
+        margin-top: 75px;
+        margin-left: 25%;
     }
     
     #profil{

@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
+app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, 'public/html')));
 app.use(express.json());
 
@@ -19,6 +20,7 @@ app.use(session({
     resave: true,
     saveUninitialized: true
 }));
+
 
 app.get('/css/:file', (req, res) => {
     const file = req.params.file;
@@ -52,6 +54,7 @@ app.get('/PoziviAjax.js', (req, res) => {
     res.type('application/javascript');
     res.sendFile(path.join(__dirname, 'public', 'PoziviAjax.js'));
 });
+
 
 
 app.post('/login', (req, res) => {

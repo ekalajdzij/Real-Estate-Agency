@@ -10,38 +10,37 @@
         <iframe style="margin: 0;" src="meni.html"></iframe>
         <div class="login-page">
             <div class="form">
-                <form class="login-form" id="form-prijava" action="/login" method="post">
+                <form class="login-form" id="form-prijava">
                     <input type="text" placeholder="username" name="username" />
                     <input type="password" placeholder="password" name="password" />
-                    <button type="submit" onclick="prijava(); return false;">Prijava</button>
+                    <button type="button" onclick="prijava()">Prijava</button>
                 </form>
             </div>
         </div>
-        <script>"../index.js"</script>
+        <script src="../PoziviAjax.js"></script>
         <script>
             function prijava() {
                 var username = document.getElementById('form-prijava').elements['username'].value;
                 var password = document.getElementById('form-prijava').elements['password'].value;
 
-                var jsonData = {
-                    username: username,
-                    password: password
-                };
+                PoziviAjax.postLogin(username, password, function(error, data) {
+                    if (error) {
+                        console.error('Greška prilikom prijave:', error);
+                    } else {
+                        alert(data.poruka);
+                    }
+                });
+            }
 
-                fetch('/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(jsonData)
-                    })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.poruka); 
-                })
-                .catch(error => console.error('Greška prilikom prijave:', error));
-                }
+            function odjava() {
+                PoziviAjax.postLogout(function(error, data) {
+                    if (error) {
+                        console.error('Greška prilikom odjave:', error);
+                    } else {
+                        alert(data.poruka);
+                    }
+                });
+            }
         </script>
     </body>
-    
 </html>

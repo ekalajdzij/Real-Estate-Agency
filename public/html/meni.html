@@ -21,16 +21,47 @@
 </html>
 
 <script>
+    /* function proveriPrijavu() {
+        let ajax = new XMLHttpRequest();
+        ajax.onreadystatechange = function() {
+            if (ajax.readyState == 4 && ajax.status == 200) {
+                let odgovor = JSON.parse(ajax.responseText);
+                if (odgovor.prijavljen) {
+                    document.getElementById('prijava-opcija').style.display = 'none';
+                    document.getElementById('odjava-opcija').style.display = 'inline-block'; 
+                } else {
+                    document.getElementById('prijava-opcija').style.display = 'inline-block';
+                    document.getElementById('odjava-opcija').style.display = 'none';
+                }
+            }
+        }
+    }
+    function odjava() {
+        let ajax = new XMLHttpRequest();
+        ajax.onreadystatechange = function() {
+            if (ajax.readyState == 4 && ajax.status == 200) {
+                let odgovor = JSON.parse(ajax.responseText);
+                if (odgovor.poruka) {
+                    document.getElementById('prijava-opcija').style.display = 'inline-block';
+                    document.getElementById('odjava-opcija').style.display = 'none';
+                    alert(odgovor.poruka);  
+                }
+                else {
+                    alert('Odjava nije uspjela!');
+                }
+            }
+        }
+    }*/
     function provjeriPrijavu() {
         fetch('/provjeriPrijavu')
         .then(response => response.json())
         .then(data => {
             if (data.prijavljen) {
-                document.getElementById('prijava-opcija').style.display = 'none';
                 document.getElementById('odjava-opcija').style.display = 'inline-block'; 
+                document.getElementById('prijava-opcija').style.display = 'none';
             } else {
-                document.getElementById('prijava-opcija').style.display = 'inline-block';
                 document.getElementById('odjava-opcija').style.display = 'none';
+                document.getElementById('prijava-opcija').style.display = 'inline-block';
             }
         });
     }
@@ -53,6 +84,5 @@
             }
         });
     }
-
     window.onload = provjeriPrijavu;
 </script>
