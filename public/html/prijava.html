@@ -31,16 +31,6 @@
                     }
                 });
             }
-
-            function odjava() {
-                PoziviAjax.postLogout(function(error, data) {
-                    if (error) {
-                        console.error('Greška prilikom odjave:', error);
-                    } else {
-                        alert(data.poruka);
-                    }
-                });
-            }
         </script>
     </body>
 </html>

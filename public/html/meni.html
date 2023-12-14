@@ -21,8 +21,10 @@
 </html>
 
 <script>
-    /* function proveriPrijavu() {
+     function provjeriPrijavu() {
         let ajax = new XMLHttpRequest();
+        ajax.open('GET', '/provjeriPrijavu', true);
+        ajax.setRequestHeader('Content-Type', 'application/json');
         ajax.onreadystatechange = function() {
             if (ajax.readyState == 4 && ajax.status == 200) {
                 let odgovor = JSON.parse(ajax.responseText);
@@ -34,10 +36,13 @@
                     document.getElementById('odjava-opcija').style.display = 'none';
                 }
             }
-        }
+        };
+        ajax.send();
     }
     function odjava() {
         let ajax = new XMLHttpRequest();
+        ajax.open('POST', '/logout', true);
+        ajax.setRequestHeader('Content-Type', 'application/json');
         ajax.onreadystatechange = function() {
             if (ajax.readyState == 4 && ajax.status == 200) {
                 let odgovor = JSON.parse(ajax.responseText);
@@ -50,39 +55,8 @@
                     alert('Odjava nije uspjela!');
                 }
             }
-        }
-    }*/
-    function provjeriPrijavu() {
-        fetch('/provjeriPrijavu')
-        .then(response => response.json())
-        .then(data => {
-            if (data.prijavljen) {
-                document.getElementById('odjava-opcija').style.display = 'inline-block'; 
-                document.getElementById('prijava-opcija').style.display = 'none';
-            } else {
-                document.getElementById('odjava-opcija').style.display = 'none';
-                document.getElementById('prijava-opcija').style.display = 'inline-block';
-            }
-        });
-    }
-    function odjava() {
-        fetch('/logout', {
-            method: 'POST',
-            headers: {
-                        'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.poruka) {
-                document.getElementById('prijava-opcija').style.display = 'inline-block';
-                document.getElementById('odjava-opcija').style.display = 'none';
-                alert(data.poruka);  
-            }
-            else {
-                alert('Odjava nije uspjela!');
-            }
-        });
+        };
+        ajax.send();
     }
     window.onload = provjeriPrijavu;
 </script>
