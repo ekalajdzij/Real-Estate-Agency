@@ -4,13 +4,13 @@
     "ime": "Emir",
     "prezime": "Kalajdzija",
     "username": "username1",
-    "password": "hashPassworda1"
+    "password": "$2b$10$/y6Ow9XcrjNZiYUyx3deYuhOlVl1RpPc9Z7wWYo.3LgfXB3c.QzAK"
   },
   {
     "id": 2,
-    "ime": "Neko2",
-    "prezime": "Nekic2",
+    "ime": "John",
+    "prezime": "Malkovich",
     "username": "username2",
-    "password": "hashPassworda2"
+    "password": "$2b$10$iv3nh/1/gcTGBEBhx31sKOh79tfklVnHcNaHnNc9gfVx0CtymQaX2"
   }
 ]

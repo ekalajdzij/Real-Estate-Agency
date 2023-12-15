@@ -1,6 +1,5 @@
 const PoziviAjax = (() => {
 
-    // vraća korisnika koji je trenutno prijavljen na sistem
     function impl_getKorisnik(fnCallback) {
         let ajax = new XMLHttpRequest();
         ajax.open('GET', '/korisnik', true);
@@ -16,7 +15,6 @@ const PoziviAjax = (() => {
         ajax.send();
     };
 
-    // ažurira podatke loginovanog korisnika
     function impl_putKorisnik(noviPodaci, fnCallback) {
         let ajax = new XMLHttpRequest();
         ajax.open('PUT', '/korisnik', true);
@@ -32,7 +30,6 @@ const PoziviAjax = (() => {
         ajax.send(JSON.stringify(noviPodaci));
     }
 
-    // dodaje novi upit za trenutno loginovanog korisnika
     function impl_postUpit(nekretnina_id, tekst_upita, fnCallback) {
         let ajax = new XMLHttpRequest();
         ajax.open('POST', '/upit', true);

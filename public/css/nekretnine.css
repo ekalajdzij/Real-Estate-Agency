@@ -9,6 +9,22 @@ iframe {
     height: 40px;
     border: none;
 }
+
+#search-container {
+    padding-top: 40px;
+    margin-left: 10%;
+}
+
+#search-container input {
+    margin-left: 10px;
+    margin-right:10px;
+}
+
+#search-container #filter-button {
+    margin-left: 40%;
+    width: 10%; 
+}
+
 .property-type {
     font-size: 24px;
     margin: 20px 0;
@@ -73,6 +89,10 @@ iframe {
 
 .property-area {
     width: 90%;
+}
+
+.property-searches {
+    text-align: left;
 }
 
 .property-price {

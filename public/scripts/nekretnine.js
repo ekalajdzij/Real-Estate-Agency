@@ -2,6 +2,9 @@ const divStan = document.getElementById("stan");
 const divKuca = document.getElementById("kuca");
 const divPp = document.getElementById("pp");
 
+let listaNekretnina = [];
+let listaKorisnika = [];
+
 PoziviAjax.getNekretnine((errorNekretnine, dataNekretnine) => {
     if (errorNekretnine) {
         console.error('Greška prilikom dohvata nekretnina:', errorNekretnine);
@@ -13,17 +16,46 @@ PoziviAjax.getNekretnine((errorNekretnine, dataNekretnine) => {
             console.error('Greška prilikom dohvata korisnika:', errorKorisnik);
         }
 
-        const listaNekretnina = dataNekretnine;
-        const listaKorisnika = dataKorisnik;
+        listaNekretnina = dataNekretnine;
+        listaKorisnika = dataKorisnik;
 
-        spojiNekretnine(divStan, listaNekretnina, listaKorisnika, "Stan");
-        spojiNekretnine(divKuca, listaNekretnina, listaKorisnika, "Kuca");
-        spojiNekretnine(divPp, listaNekretnina, listaKorisnika, "Poslovni prostor");
+        
+        let nekretnine = SpisakNekretnina();
+        nekretnine.init(listaNekretnina, listaKorisnika);
+        spojiNekretnine(divStan, nekretnine, "Stan");
+        spojiNekretnine(divKuca, nekretnine, "Kuca");
+        spojiNekretnine(divPp, nekretnine, "Poslovni prostor");
     });
 });
+let min_kvadratura = 0;
+let max_kvadratura = 0;
+let min_cijena = 0;
+let max_cijena = 0;
+document.addEventListener("DOMContentLoaded", function () {
+    const minCijenaInput = document.getElementById("min-cijena");
+    const maxCijenaInput = document.getElementById("max-cijena");
+    const minKvadraturaInput = document.getElementById("min-kvadratura");
+    const maxKvadraturaInput = document.getElementById("max-kvadratura");
+    const filterButton = document.getElementById("filter-button");
 
-function spojiNekretnine(divReferenca, listaNekretnina, listaKorisnika, tip_nekretnine) {
-    const filtriraneNekretnine = listaNekretnina.filter(nekretnina => nekretnina.tip_nekretnine === tip_nekretnine);
+    filterButton.addEventListener("click", function () {
+    
+        min_kvadratura =  parseInt(minKvadraturaInput.value);
+        max_kvadratura = parseInt(maxKvadraturaInput.value);
+        min_cijena = parseInt(minCijenaInput.value);
+        max_cijena =  parseInt(maxCijenaInput.value);
+        let nekretnine = SpisakNekretnina();
+        nekretnine.init(listaNekretnina, listaKorisnika);
+        spojiNekretnine(divStan, nekretnine, "Stan");
+        spojiNekretnine(divKuca, nekretnine, "Kuca");
+        spojiNekretnine(divPp, nekretnine, "Poslovni prostor");
+
+
+        //console.log(min_kvadratura, max_kvadratura, min_cijena, max_cijena);
+    });
+});
+function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
+    const filtriraneNekretnine = instancaModula.filtrirajNekretnine({ tip_nekretnine: tip_nekretnine, min_cijena: min_cijena, max_cijena: max_cijena, min_kvadratura: min_kvadratura, max_kvadratura: max_kvadratura});
 
     if (!divReferenca) return;
 
@@ -49,22 +81,18 @@ function spojiNekretnine(divReferenca, listaNekretnina, listaKorisnika, tip_nekr
         } else if (tip_nekretnine == "Poslovni prostor") {
             nekretninaElement.classList.add("property-posao")
         }
-        
-        if (Array.isArray(listaKorisnika)) {const korisnik = listaKorisnika.find(user => user.id === nekretnina.upiti[0].korisnik_id);}
-        else korisnik = listaKorisnika;
-
         nekretninaElement.innerHTML = `
-            <div class="property-details">
-                <img class="property-image" src="https://hips.hearstapps.com/hmg-prod/images/beautiful-sunny-forest-wild-nature-outdoor-travel-royalty-free-image-1576784717.jpg">
-                <div class="property-name">${nekretnina.naziv}</div>
-                <div class="property-area">Kvadratura: ${nekretnina.kvadratura} m2</div>
-                <div class="property-price">Cijena: ${nekretnina.cijena} BAM</div>
-                <button type="button">Detalji</button>
-            </div>
+        <div class="property-details">
+        <img class="property-image" src="https://hips.hearstapps.com/hmg-prod/images/beautiful-sunny-forest-wild-nature-outdoor-travel-royalty-free-image-1576784717.jpg">
+            <div class="property-name">${nekretnina.naziv}</div>
+            <div class="property-area">Kvadratura: ${nekretnina.kvadratura} m2</div>
+            <div class="property-price">Cijena: ${nekretnina.cijena} BAM</div>
+            <div class="property-clicks" id = "klikovi-idNekretnine">Klikovi: </div>
+            <div class="property-searches" id = "pretrage-idNekretnine">Pretrage: </div>
+            <button type="button">Detalji</button>
+        </div>
         `;
 
         propertyList.appendChild(nekretninaElement);
     });
 }
-
-
