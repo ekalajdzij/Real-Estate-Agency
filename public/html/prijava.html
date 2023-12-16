@@ -7,29 +7,25 @@
         <title>Prijava</title>
     </head>
     <body>
-        <iframe style="margin: 0;" src="meni.html"></iframe>
+        <iframe id="meni"style="margin: 0;" src="meni.html"></iframe>
         <div class="login-page">
             <div class="form">
                 <form class="login-form" id="form-prijava">
-                    <input type="text" placeholder="username" name="username" />
-                    <input type="password" placeholder="password" name="password" />
-                    <button type="button" onclick="prijava()">Prijava</button>
+                    <input type="text" id = "username" placeholder="username" name="username" />
+                    <input type="password" id = "password" placeholder="password" name="password" />
+                    <button type="button" onclick="PoziviAjax.postLogin(username.value, password.value, callback)">Prijava</button>
                 </form>
             </div>
         </div>
         <script src="../PoziviAjax.js"></script>
         <script>
-            function prijava() {
-                var username = document.getElementById('form-prijava').elements['username'].value;
-                var password = document.getElementById('form-prijava').elements['password'].value;
-
-                PoziviAjax.postLogin(username, password, function(error, data) {
-                    if (error) {
-                        console.error('Greška prilikom prijave:', error);
-                    } else {
-                        alert(data.poruka);
-                    }
-                });
+            function callback(error, data) {
+                if (data) {
+                    alert(data['poruka']);
+                    let meni = document.getElementById('meni');
+                    meni.contentWindow.document.getElementById('prijava-opcija').style.display = 'none'; 
+                    meni.contentWindow.document.getElementById('odjava-opcija').style.display = 'inline-block'; 
+                }
             }
         </script>
     </body>
