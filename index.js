@@ -24,7 +24,7 @@ app.use(session({
 
 app.get('/css/:file', (req, res) => {
     const file = req.params.file;
-    res.sendFile(path.join(__dirname, 'public','css', file), {
+    res.sendFile(path.join(__dirname, 'public', 'css', file), {
         headers: {
             'Content-Type': 'text/css'
         }
@@ -62,8 +62,8 @@ app.get('/MarketingAjax.js', (req, res) => {
 
 
 app.post('/login', (req, res) => {
-    const {username, password} = req.body;
-    fs.readFile('./data/korisnici.json', 'utf-8', async(error, data) => {
+    const { username, password } = req.body;
+    fs.readFile('./data/korisnici.json', 'utf-8', async (error, data) => {
         if (error) {
             console.log(error);
             return;
@@ -71,18 +71,18 @@ app.post('/login', (req, res) => {
         if (data) {
             let users = JSON.parse(data);
             var checkVar = false;
-            const loop = async() => {
-                for (let i = 0; i<users.length; i++) {
+            const loop = async () => {
+                for (let i = 0; i < users.length; i++) {
                     if (users[i].username === username) {
                         let match = await bcrypt.compare(password, users[i].password);
                         if (match) {
                             checkVar = true;
                             req.session.user = users[i];
-                            res.status(200).json({poruka: "Uspješna prijava"});
+                            res.status(200).json({ "poruka": "Uspješna prijava" });
                             return res.end();
                         } else if (!match) {
                             checkVar = true;
-                            res.status(401).json({greska: "Neuspješna prijava"});
+                            res.status(401).json({ "greska": "Neuspješna prijava" });
                             return res.end();
                         }
                     }
@@ -90,40 +90,14 @@ app.post('/login', (req, res) => {
                 }
             }
             await loop();
-            if(!checkVar) {
-                res.status(401).json({greska: "Neuspješna prijava"});
+            if (!checkVar) {
+                res.status(401).json({ "greska": "Neuspješna prijava" });
                 return res.end();
             }
         }
     });
 });
-/*
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    const user = users.find(user => user.username === username);
-    if (user) {
-        if (password === user.password) {
-            req.session.user = user;
-            //console.log(req.session.user);
-            res.status(200).json({ "poruka": "Uspješna prijava" });
-        } else {
-            res.status(401).json({ "greska": "Neuspješna prijava" });
-        }
-    } else {
-        res.status(401).json({ "greska": "Neuspješna prijava" });
-    }
-});/*
-        if (password === user.password) {
-            req.session.user = user;
-            //console.log(req.session.user);
-            res.status(200).json({ "poruka": "Uspješna prijava" });
-        } else {
-            res.status(401).json({ "greska": "Neuspješna prijava" });
-        }
-    } else {
-        res.status(401).json({ "greska": "Neuspješna prijava" });
-    }
-});*/
+
 
 app.post(('/logout'), (req, res) => {
     if (req.session && req.session.user) {
@@ -149,14 +123,12 @@ app.get('/provjeriPrijavu', (req, res) => {
     if (req.session && req.session.user) {
         res.status(200).json({ prijavljen: true, user: req.session.user });
     } else {
-        //console.log(req.session.user);
+        
         res.status(200).json({ prijavljen: false });
     }
 });
 
 app.get('/korisnik', (req, res) => {
-    //console.log(req.session);
-    //console.log(req.session.user);
     if (req.session && req.session.user) {
         let user = req.session.user;
         const data = {
@@ -174,27 +146,22 @@ app.get('/korisnik', (req, res) => {
 
 app.post('/upit', (req, res) => {
     if (!req.session || !req.session.user) {
-        return  res.status(401).json({ "greska": "Neautorizovan pristup" });
+        return res.status(401).json({ "greska": "Neautorizovan pristup" });
     }
     const user = users.find(user => user.id === req.session.user.id);
-    //console.log(req.body);
-    const {nekretnina_id, tekst_upita} = req.body;
+    const { nekretnina_id, tekst_upita } = req.body;
     const nekretnina = nekretnine.find(nekretnina => nekretnina.id === parseInt(nekretnina_id, 10));
-    //console.log(req.body);
-    //console.log(nekretnina_id);
-    //console.log(tekst_upita);
-    //console.log(nekretnina);
+
     if (!nekretnina) {
-        return res.status(400).json({"greska":"Nekretnina sa id-em " + nekretnina_id + " ne postoji"});
+        return res.status(400).json({ "greska": "Nekretnina sa id-em " + nekretnina_id + " ne postoji" });
     } else {
         const data = {
             korisnik_id: user.id,
             tekst_upita: tekst_upita
         }
         nekretnina.upiti.push(data);
-        //console.log(nekretnina);
         writeJsonFile('./data/nekretnine.json', nekretnine);
-        return res.status(200).json({"poruka":"Upit je uspješno dodan"});
+        return res.status(200).json({ "poruka": "Upit je uspješno dodan" });
     }
 
 });
@@ -206,7 +173,6 @@ app.put('/korisnik', (req, res) => {
     console.log(req.session.user);
     data = req.body;
     console.log(req.body);
-    //let data = JSON.parse(req.body);
     let username = data['username'];
     let password = data['password'];
     let ime = data['ime'];
@@ -217,7 +183,7 @@ app.put('/korisnik', (req, res) => {
         return res.status(401).json({ "greska": "Neautorizovan pristup" });
     }
     if (ime) users[index].ime = ime;
-    if (prezime) users[index].prezime = prezime;    
+    if (prezime) users[index].prezime = prezime;
     if (username) users[index].username = username;
     if (password) {
         bcrypt.hash(password, 10, (err, hashedPassword) => {
@@ -234,44 +200,95 @@ app.put('/korisnik', (req, res) => {
 
 
 app.post('/marketing/nekretnine', (req, res) => {
-    const { nizNekretnina } = req.body;
-    const preference = readJSONFile('./data/preference.json');
-    nizNekretnina.forEach((idNekretnine) => {
-        preference.pretrage[idNekretnine] = (preference.pretrage[idNekretnine] || 0) + 1;
-    });
-    writeJsonFile('./data/preference.json', preference);
-    res.status(200).send();
+    try {
+        const { nizNekretnina } = req.body;
+        let preference = readJSONFile('./data/preference.json');
+
+        nizNekretnina.forEach((idNekretnine) => {
+            const existingIndex = preference.findIndex((item) => item.id === idNekretnine);
+
+            if (existingIndex !== -1) {
+                preference[existingIndex].pretrage = (preference[existingIndex].pretrage) + 1;
+            } else {
+                preference.push({
+                    id: idNekretnine,
+                    klikovi: 0,
+                    pretrage: 1
+                });
+            }
+        });
+        writeJsonFile('./data/preference.json', preference);
+        res.status(200).send();
+    } catch (error) {
+        console.error('Error:', error);
+    }
 });
 
 app.post('/marketing/nekretnina/:id', (req, res) => {
-    const { id } = req.params;
-    const preference = readJSONFile('./data/preference.json');
-    preference.klikovi[id] = (preference.klikovi[id] || 0) + 1;
-    writeJsonFile('./data/preference.json', preference)
-    res.status(200).send();
+    try {
+        const  id  = JSON.parse(req.params.id);
+        const preference = readJSONFile('./data/preference.json');
+
+        const index = preference.findIndex((item) => item.id == id);
+
+        if (index !== -1) {
+            preference[index].klikovi = (preference[index].klikovi) + 1;
+        } else {
+            preference.push({
+                id: id,
+                klikovi: 1,
+                pretrage: 0
+            });
+        }
+        writeJsonFile('./data/preference.json', preference);
+        res.status(200).send();
+    } catch (error) {
+        console.error('Error:', error);
+    }
 });
 
-app.post('/marketing/osvjezi', (req, res) => {
-    const { nizNekretnina } = req.body;
-    const preference = readJSONFile('./data/preference.json');
+let preferenceStaro = [{}];
+app.post('/marketing/osvjezi', (req,res) => {
 
-    const promjene = nizNekretnina.filter(id => {
-        return (
-            preference.pretrage[id] !== undefined ||
-            preference.klikovi[id] !== undefined
-        );
+    let preference = [];
+    if (Object.keys(req.body).length !== 0) {
+        const  nizNekretnina  = req.body.nizNekretnina;
+        preference = preference.filter(obj => nizNekretnina.some(element => element === obj.id));
+        preference = readJSONFile('./data/preference.json');
+        preferenceStaro = preference;
+        res.status(200).send({nizNekretnina:preference});
+    } else {
+        console.log(preferenceStaro);
+        preference = readJSONFile('./data/preference.json');
+        const changes = findChanges(preferenceStaro, preference);
+        preferenceStaro = preference;
+        res.status(200).send({nizNekretnina:changes});
+    }
+});
+
+function findChanges(oldArray, newArray) {
+    const changes = [];
+  
+    newArray.forEach((newObj) => {
+      const oldObj = oldArray.find((obj) => obj.id == newObj.id);
+  
+      if (oldObj && (oldObj.klikovi != newObj.klikovi || oldObj.pretrage != newObj.pretrage)) { 
+        changes.push({
+          id: newObj.id,
+          klikovi: newObj.klikovi,
+          pretrage: newObj.pretrage
+        })
+      }
+      if (!oldObj) {
+        changes.push({
+            id: newObj.id,
+            klikovi: newObj.klikovi,
+            pretrage: newObj.pretrage
+          })
+      }
     });
-
-    const odgovor = {
-        nizNekretnina: promjene.map(id => ({
-            id: id,
-            klikovi: preference.klikovi[id] || 0,
-            pretrage: preference.pretrage[id] || 0,
-        })),
-    };
-    res.status(200).json(odgovor);
-});
+  
+    return changes;
+  }
 
 app.listen(3000);
-
-

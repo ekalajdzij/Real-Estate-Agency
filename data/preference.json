@@ -1,32 +1,72 @@
-{
-  "pretrage": [
-    null,
-    4,
-    null,
-    null,
-    null,
-    4,
-    4,
-    4,
-    null,
-    null,
-    null,
-    null,
-    4
-  ],
-  "klikovi": [
-    null,
-    3,
-    null,
-    null,
-    null,
-    2,
-    2,
-    2,
-    null,
-    null,
-    null,
-    null,
-    2
-  ]
-}
+[
+  {
+    "id": 1,
+    "klikovi": 6,
+    "pretrage": 9
+  },
+  {
+    "id": 2,
+    "klikovi": 1,
+    "pretrage": 10
+  },
+  {
+    "id": 5,
+    "klikovi": 3,
+    "pretrage": 11
+  },
+  {
+    "id": 4,
+    "klikovi": 1,
+    "pretrage": 11
+  },
+  {
+    "id": 3,
+    "klikovi": 5,
+    "pretrage": 8
+  },
+  {
+    "id": 50,
+    "klikovi": 2,
+    "pretrage": 0
+  },
+  {
+    "id": 40,
+    "klikovi": 1,
+    "pretrage": 0
+  },
+  {
+    "id": 30,
+    "klikovi": 1,
+    "pretrage": 0
+  },
+  {
+    "id": 300,
+    "klikovi": 1,
+    "pretrage": 0
+  },
+  {
+    "id": 150,
+    "klikovi": 1,
+    "pretrage": 0
+  },
+  {
+    "id": 99,
+    "klikovi": 1,
+    "pretrage": 0
+  },
+  {
+    "id": 88,
+    "klikovi": 1,
+    "pretrage": 0
+  },
+  {
+    "id": 6,
+    "klikovi": 0,
+    "pretrage": 11
+  },
+  {
+    "id": 7,
+    "klikovi": 0,
+    "pretrage": 8
+  }
+]
