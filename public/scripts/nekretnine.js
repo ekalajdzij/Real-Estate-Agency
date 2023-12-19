@@ -61,6 +61,10 @@ const interval = setInterval(() => {
     MarketingAjax.osvjeziKlikove(divNekretnine);
 }, 5000);
 
+function stopInterval() {
+    clearInterval(interval);
+}
+
 function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
     const filtriraneNekretnine = instancaModula.filtrirajNekretnine({ tip_nekretnine: tip_nekretnine, min_cijena: min_cijena, max_cijena: max_cijena, min_kvadratura: min_kvadratura, max_kvadratura: max_kvadratura});
     //console.log(filtriraneNekretnine);
@@ -108,7 +112,7 @@ function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
 let previousClickedElement = null;
 function klikDetalji(nekretninaId) {
     MarketingAjax.klikNekretnina(nekretninaId);
-    MarketingAjax.osvjeziKlikove(divNekretnine);
+    //stopInterval();
 
     const propertyList = document.querySelector('.property-list');
     const clickedPropertyElement = document.getElementById(nekretninaId);

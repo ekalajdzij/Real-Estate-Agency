@@ -132,7 +132,7 @@ const MarketingAjax = (() => {
         }
         const ajax = new XMLHttpRequest();
         ajax.open('POST', '/marketing/nekretnine', true);
-        prviDetalji = true;
+        prviPretrage = true;
         ajax.setRequestHeader('Content-Type', 'application/json');
         ajax.send(JSON.stringify({ nizNekretnina: ids }));
         
