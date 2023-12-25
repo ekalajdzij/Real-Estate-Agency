@@ -90,13 +90,12 @@ const PoziviAjax = (() => {
         };
         ajax.send();
     } 
-
     return {
-        postLogin: impl_postLogin,//dodano
-        postLogout: impl_postLogout,//dodano
-        getKorisnik: impl_getKorisnik,//dodano
+        postLogin: impl_postLogin,
+        postLogout: impl_postLogout,
+        getKorisnik: impl_getKorisnik,
         putKorisnik: impl_putKorisnik,
         postUpit: impl_postUpit,
-        getNekretnine: impl_getNekretnine//dodano
+        getNekretnine: impl_getNekretnine
     };
 })();

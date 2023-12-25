@@ -22,6 +22,14 @@
       {
         "korisnik_id": 1,
         "tekst_upita": "Prelijepoxxxxx"
+      },
+      {
+        "korisnik_id": 2,
+        "tekst_upita": "Proba upisa"
+      },
+      {
+        "korisnik_id": 2,
+        "tekst_upita": "Proba upisa"
       }
     ]
   },

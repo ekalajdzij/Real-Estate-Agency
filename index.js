@@ -31,15 +31,6 @@ app.get('/css/:file', (req, res) => {
     });
 });
 
-const readJSONFile = (filename) => {
-    const data = fs.readFileSync(filename, "utf8");
-    return JSON.parse(data);
-}
-
-const writeJsonFile = (filename, data) => {
-    fs.writeFileSync(filename, JSON.stringify(data, null, 2), 'utf8');
-}
-
 app.get('/scripts/nekretnine.js', (req, res) => {
     res.type('application/javascript');
     res.sendFile(path.join(__dirname, 'public', 'scripts', 'nekretnine.js'));
@@ -102,11 +93,9 @@ app.post('/login', (req, res) => {
 app.post(('/logout'), (req, res) => {
     if (req.session && req.session.user) {
         req.session.destroy((error) => {
-            //console.log("odjava pokusaj");
             if (error) {
                 res.status(401).json({ "greska": "Neautorizovan pristup" });
             } else {
-                //console.log("odjava uspjela");
                 res.status(200).json({ "poruka": "Uspješna odjava" });
             }
         });
@@ -115,17 +104,14 @@ app.post(('/logout'), (req, res) => {
     }
 });
 app.get('/nekretnine', (req, res) => {
-    const listaNekretnina = readJSONFile('./data/nekretnine.json');
-    res.status(200).json(listaNekretnina);
-});
-
-app.get('/provjeriPrijavu', (req, res) => {
-    if (req.session && req.session.user) {
-        res.status(200).json({ prijavljen: true, user: req.session.user });
-    } else {
-        
-        res.status(200).json({ prijavljen: false });
-    }
+    fs.readFile('./data/nekretnine.json', (error, data) => {
+        if (error) {
+            res.status(500).json({ greska: error.message });
+        } else {
+            const listaNekretnina = JSON.parse(data.toString('utf8'));
+            res.status(200).json(listaNekretnina);
+        }
+    });
 });
 
 app.get('/korisnik', (req, res) => {
@@ -160,8 +146,14 @@ app.post('/upit', (req, res) => {
             tekst_upita: tekst_upita
         }
         nekretnina.upiti.push(data);
-        writeJsonFile('./data/nekretnine.json', nekretnine);
-        return res.status(200).json({ "poruka": "Upit je uspješno dodan" });
+        const jsonData = JSON.stringify(nekretnine);
+        fs.writeFile('./data/nekretnine.json', jsonData, 'utf8', (error) => {
+            if (error) {
+                return res.status(500).json({ "greska": "Došlo je do greške prilikom pisanja u datoteku" });
+            } else {
+                return res.status(200).json({ "poruka": "Upit je uspješno dodan" });
+            }
+        });
     }
 
 });
@@ -170,9 +162,7 @@ app.put('/korisnik', (req, res) => {
     if (!req.session || !req.session.user) {
         return res.status(401).json({ "greska": "Neautorizovan pristup" });
     }
-    console.log(req.session.user);
     data = req.body;
-    console.log(req.body);
     let username = data['username'];
     let password = data['password'];
     let ime = data['ime'];
@@ -192,33 +182,59 @@ app.put('/korisnik', (req, res) => {
                 return;
             }
             users[index].password = hashedPassword;
-            writeJsonFile('./data/korisnici.json', users);
+            fs.writeFile('./data/korisnici.json', JSON.stringify(users), 'utf8', (error) => {
+                if (error) {
+                    return res.status(500).json({ "greska": "Došlo je do greške prilikom pisanja u datoteku" });
+                } else {
+                    return res.status(200).json({ "poruka": "Podaci su uspješno ažurirani" });
+                }
+            });
+        });
+    } else {
+        fs.writeFile('./data/korisnici.json', JSON.stringify(users), 'utf8', (error) => {
+            if (error) {
+                return res.status(500).json({ "greska": "Došlo je do interne greške prilikom pisanja u datoteku" });
+            } else {
+                return res.status(200).json({ "poruka": "Podaci su uspješno ažurirani" });
+            }
         });
     }
-    return res.status(200).json({ "poruka": "Podaci su uspješno ažurirani" });
 });
 
 
 app.post('/marketing/nekretnine', (req, res) => {
     try {
         const { nizNekretnina } = req.body;
-        let preference = readJSONFile('./data/preference.json');
-
-        nizNekretnina.forEach((idNekretnine) => {
-            const existingIndex = preference.findIndex((item) => item.id === idNekretnine);
-
-            if (existingIndex !== -1) {
-                preference[existingIndex].pretrage = (preference[existingIndex].pretrage) + 1;
+        fs.readFile('./data/preference.json', (error, data) => {
+            if (error) {
+                res.status(500).json({ greska: error.message });
             } else {
-                preference.push({
-                    id: idNekretnine,
-                    klikovi: 0,
-                    pretrage: 1
+                let preference = JSON.parse(data.toString('utf8'));
+                nizNekretnina.forEach((idNekretnine) => {
+                    const existingIndex = preference.find(item => item.id == idNekretnine);
+
+                    if (existingIndex != null) {
+                        existingIndex.pretrage++;
+                    } else {
+                        preference.push({
+                            id: idNekretnine,
+                            klikovi: 0,
+                            pretrage: 1
+                        });
+                    }
+                    
+
+                });
+                fs.writeFile('./data/preference.json', JSON.stringify(preference), 'utf8', (writeError) => {
+                    if (writeError) {
+                        return res.status(500).json({ "greska": "Došlo je do interne greške prilikom pisanja u datoteku" });
+                    } else {
+                        return res.status(200).send();
+                    }
                 });
             }
         });
-        writeJsonFile('./data/preference.json', preference);
-        res.status(200).send();
+        
     } catch (error) {
         console.error('Error:', error);
     }
@@ -226,69 +242,109 @@ app.post('/marketing/nekretnine', (req, res) => {
 
 app.post('/marketing/nekretnina/:id', (req, res) => {
     try {
-        const  id  = JSON.parse(req.params.id);
-        const preference = readJSONFile('./data/preference.json');
+        const id = JSON.parse(req.params.id);
+        fs.readFile('./data/preference.json', (error, data) => {
+            if (error) {
+                res.status(500).json({ greska: error.message });
+            } else {
+                const preference = JSON.parse(data.toString('utf8'));
+                const index = preference.findIndex((item) => item.id == id);
 
-        const index = preference.findIndex((item) => item.id == id);
+                if (index !== -1) {
+                    preference[index].klikovi = (preference[index].klikovi) + 1;
+                } else {
+                    preference.push({
+                        id: id,
+                        klikovi: 1,
+                        pretrage: 0
+                    });
+                }
+                fs.writeFile('./data/preference.json', JSON.stringify(preference), 'utf8', (writeError) => {
+                    if (writeError) {
+                        return res.status(500).json({ "greska": "Došlo je do interne greške prilikom pisanja u datoteku" });
+                    } else {
+                        return res.status(200).send();
+                    }
+                });
+            }
 
-        if (index !== -1) {
-            preference[index].klikovi = (preference[index].klikovi) + 1;
-        } else {
-            preference.push({
-                id: id,
-                klikovi: 1,
-                pretrage: 0
-            });
-        }
-        writeJsonFile('./data/preference.json', preference);
-        res.status(200).send();
+        });
     } catch (error) {
         console.error('Error:', error);
     }
 });
 
 let preferenceStaro = [{}];
-app.post('/marketing/osvjezi', (req,res) => {
+let preference = [];
+let changes = [];
+app.post('/marketing/osvjezi', (req, res) => {
 
-    let preference = [];
-    if (Object.keys(req.body).length !== 0) {
-        const  nizNekretnina  = req.body.nizNekretnina;
-        preference = preference.filter(obj => nizNekretnina.some(element => element === obj.id));
-        preference = readJSONFile('./data/preference.json');
-        preferenceStaro = preference;
-        res.status(200).send({nizNekretnina:preference});
-    } else {
-        console.log(preferenceStaro);
-        preference = readJSONFile('./data/preference.json');
-        const changes = findChanges(preferenceStaro, preference);
-        preferenceStaro = preference;
-        res.status(200).send({nizNekretnina:changes});
+    if (Object.keys(req.body).length !== 0) { // ima body
+        const nizNekretnina = req.body.nizNekretnina;
+        if (nizNekretnina.length == 1) {
+            req.session.osvjezavajJednu = nizNekretnina[0];
+            req.session.prviPut	= true;
+        } else {
+            req.session.osvjezavajJednu = null;
+            req.session.prviPut = true;
+        }
+        
+       
+        fs.readFile('./data/preference.json', (error, data) => {
+            if (error) {
+                res.status(500).json({ greska: error.message });
+            } else {
+                preference = JSON.parse(data);
+                changes = findChanges(preferenceStaro, preference);
+                preferenceStaro = preference;
+                res.status(200).send({ nizNekretnina: changes });
+            }
+        })
+    } else {    //nema body
+        fs.readFile('./data/preference.json', (error, data) => {
+            if (error) {
+                res.status(500).json({ greska: error.message });
+            } else {
+                preference = JSON.parse(data.toString('utf8'));
+                if (req.session.prviPut == null) {
+                    changes = preference;
+                    req.session.prviPut = 1;
+                } else {
+                    changes = findChanges(preferenceStaro, preference);
+                }
+                if (req.session.osvjezavajJednu != null) {
+                    changes = changes.some(item => item.id == req.session.osvjezavajJednu)
+                }
+                preferenceStaro = preference;
+                res.status(200).send({ nizNekretnina: changes });
+            }
+        })
     }
 });
 
 function findChanges(oldArray, newArray) {
     const changes = [];
-  
+
     newArray.forEach((newObj) => {
-      const oldObj = oldArray.find((obj) => obj.id == newObj.id);
-  
-      if (oldObj && (oldObj.klikovi != newObj.klikovi || oldObj.pretrage != newObj.pretrage)) { 
-        changes.push({
-          id: newObj.id,
-          klikovi: newObj.klikovi,
-          pretrage: newObj.pretrage
-        })
-      }
-      if (!oldObj) {
-        changes.push({
-            id: newObj.id,
-            klikovi: newObj.klikovi,
-            pretrage: newObj.pretrage
-          })
-      }
+        const oldObj = oldArray.find((obj) => obj.id == newObj.id);
+
+        if (oldObj && (oldObj.klikovi != newObj.klikovi || oldObj.pretrage != newObj.pretrage)) {
+            changes.push({
+                id: newObj.id,
+                klikovi: newObj.klikovi,
+                pretrage: newObj.pretrage
+            })
+        }
+        if (!oldObj) {
+            changes.push({
+                id: newObj.id,
+                klikovi: newObj.klikovi,
+                pretrage: newObj.pretrage
+            })
+        }
     });
-  
+
     return changes;
-  }
+}
 
 app.listen(3000);

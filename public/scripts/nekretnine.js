@@ -13,22 +13,14 @@ PoziviAjax.getNekretnine((errorNekretnine, dataNekretnine) => {
         console.error('Greška prilikom dohvata nekretnina:', errorNekretnine);
         return;
     }
-    PoziviAjax.getKorisnik((errorKorisnik, dataKorisnik) => {
-        if (errorKorisnik) {
-            console.error('Greška prilikom dohvata korisnika:', errorKorisnik);
-        }
-
         listaNekretnina = dataNekretnine;
-        listaKorisnika = dataKorisnik;
-
-        
         let nekretnine = SpisakNekretnina();
         nekretnine.init(listaNekretnina, listaKorisnika);
         spojiNekretnine(divStan, nekretnine, "Stan");
         spojiNekretnine(divKuca, nekretnine, "Kuca");
         spojiNekretnine(divPp, nekretnine, "Poslovni prostor");
         prvoUcitavanje = false;
-    });
+        MarketingAjax.novoFiltriranje(listaNekretnina);
 });
 let min_kvadratura = 0;
 let max_kvadratura = 0;
@@ -43,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     filterButton.addEventListener("click", function () {
     
+        filtNekretnine = [];
         min_kvadratura =  parseInt(minKvadraturaInput.value);
         max_kvadratura = parseInt(maxKvadraturaInput.value);
         min_cijena = parseInt(minCijenaInput.value);
@@ -53,22 +46,23 @@ document.addEventListener("DOMContentLoaded", function () {
         spojiNekretnine(divKuca, nekretnine, "Kuca");
         spojiNekretnine(divPp, nekretnine, "Poslovni prostor");
         MarketingAjax.osvjeziPretrage(divNekretnine);
+        MarketingAjax.novoFiltriranje(filtNekretnine);
 
     });
 });
+
 const interval = setInterval(() => {
     MarketingAjax.osvjeziPretrage(divNekretnine);
     MarketingAjax.osvjeziKlikove(divNekretnine);
-}, 5000);
+}, 500);
+
 
 function stopInterval() {
     clearInterval(interval);
 }
-
 function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
     const filtriraneNekretnine = instancaModula.filtrirajNekretnine({ tip_nekretnine: tip_nekretnine, min_cijena: min_cijena, max_cijena: max_cijena, min_kvadratura: min_kvadratura, max_kvadratura: max_kvadratura});
-    //console.log(filtriraneNekretnine);
-    if (!prvoUcitavanje) MarketingAjax.novoFiltriranje(filtriraneNekretnine);
+    filtNekretnine.push.apply(filtNekretnine, filtriraneNekretnine);
     if (!divReferenca) return;
 
     divReferenca.innerHTML = "";
@@ -112,11 +106,8 @@ function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
 let previousClickedElement = null;
 function klikDetalji(nekretninaId) {
     MarketingAjax.klikNekretnina(nekretninaId);
-    //stopInterval();
-
     const propertyList = document.querySelector('.property-list');
     const clickedPropertyElement = document.getElementById(nekretninaId);
-
     if (propertyList && clickedPropertyElement) {
         if (previousClickedElement) {
             propertyList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(500px, 1fr))';

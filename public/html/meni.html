@@ -14,50 +14,36 @@
                 <li> <a href="nekretnine.html" target="_parent">Nekretnine</a></li>
                 <li> <a href="detalji.html" target="_parent">Detalji</a></li>
                 <li id="prijava-opcija"> <a href="prijava.html" target="_parent">Prijava</a></li>
-                <li id="odjava-opcija"> <a href="prijava.html" onclick="odjava()" target="_parent">Odjava</a></li>
+                <li id="odjava-opcija"> <a href="prijava.html" onclick="odjava(); return false;" target="_parent">Odjava</a></li>
             </ul>
         </div>
+        <script src="../PoziviAjax.js"></script>
     </body>
 </html>
 
 <script>
-     function provjeriPrijavu() {
-        let ajax = new XMLHttpRequest();
-        ajax.open('GET', '/provjeriPrijavu', true);
-        ajax.setRequestHeader('Content-Type', 'application/json');
-        ajax.onreadystatechange = function() {
-            if (ajax.readyState == 4 && ajax.status == 200) {
-                let odgovor = JSON.parse(ajax.responseText);
-                if (odgovor.prijavljen) {
-                    document.getElementById('prijava-opcija').style.display = 'none';
-                    document.getElementById('odjava-opcija').style.display = 'inline-block'; 
-                } else {
-                    document.getElementById('prijava-opcija').style.display = 'inline-block';
-                    document.getElementById('odjava-opcija').style.display = 'none';
-                }
+    function provjeriPrijavu() {
+        PoziviAjax.getKorisnik(function(error, data) {
+            if (error) {
+                document.getElementById('prijava-opcija').style.display = 'inline-block';
+                document.getElementById('odjava-opcija').style.display = 'none';
+            } else {
+                document.getElementById('prijava-opcija').style.display = 'none';
+                document.getElementById('odjava-opcija').style.display = 'inline-block';
             }
-        };
-        ajax.send();
+        });
     }
     function odjava() {
-        let ajax = new XMLHttpRequest();
-        ajax.open('POST', '/logout', true);
-        ajax.setRequestHeader('Content-Type', 'application/json');
-        ajax.onreadystatechange = function() {
-            if (ajax.readyState == 4 && ajax.status == 200) {
-                let odgovor = JSON.parse(ajax.responseText);
-                if (odgovor.poruka) {
-                    document.getElementById('prijava-opcija').style.display = 'inline-block';
-                    document.getElementById('odjava-opcija').style.display = 'none';
-                    alert(odgovor.poruka);
-                    window.location.href = 'prijava.html';  
-                }
-                else {
-                    alert('Odjava nije uspjela!');
-                }
+        PoziviAjax.postLogout(function(error, response) {
+            if (response.poruka) {
+                alert(response.poruka);
+                parent.window.location.href = 'prijava.html'; 
+                document.getElementById('prijava-opcija').style.display = 'inline-block';
+                document.getElementById('odjava-opcija').style.display = 'none';
+            } else {
+                alert('Odjava nije uspjela!');
             }
-        };
-        ajax.send();
+        });
     }
     window.onload = provjeriPrijavu;
 </script>
