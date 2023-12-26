@@ -305,9 +305,9 @@ app.post('/marketing/osvjezi', (req, res) => {
             if (error) {
                 res.status(500).json({ greska: error.message });
             } else {
-                preference = JSON.parse(data.toString('utf8'));
+                preference = JSON.parse(data);
                 changes = findChanges(preferenceStaro, preference);
-                if (req.session.prviPut == null) {
+                if (req.session.prviPut != false) {
                     changes = preference;
                     req.session.prviPut = 1;
                 } else {
