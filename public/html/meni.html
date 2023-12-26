@@ -10,7 +10,7 @@
     <body>
         <div id="meni">
             <ul>
-                <li> <a href="profil.html" target="_parent">Profil</a></li>
+                <li id="profil-opcija"> <a href="profil.html" target="_parent">Profil</a></li>
                 <li> <a href="nekretnine.html" target="_parent">Nekretnine</a></li>
                 <li> <a href="detalji.html" target="_parent">Detalji</a></li>
                 <li id="prijava-opcija"> <a href="prijava.html" target="_parent">Prijava</a></li>
@@ -27,9 +27,11 @@
             if (error) {
                 document.getElementById('prijava-opcija').style.display = 'inline-block';
                 document.getElementById('odjava-opcija').style.display = 'none';
+                document.getElementById('profil-opcija').style.display = 'none';
             } else {
                 document.getElementById('prijava-opcija').style.display = 'none';
                 document.getElementById('odjava-opcija').style.display = 'inline-block';
+                document.getElementById('profil-opcija').style.display = 'inline-block';
             }
         });
     }
@@ -40,6 +42,7 @@
                 parent.window.location.href = 'prijava.html'; 
                 document.getElementById('prijava-opcija').style.display = 'inline-block';
                 document.getElementById('odjava-opcija').style.display = 'none';
+                document.getElementById('profil-opcija').style.display = 'none';
             } else {
                 alert('Odjava nije uspjela!');
             }
