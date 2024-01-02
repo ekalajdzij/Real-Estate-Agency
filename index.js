@@ -209,7 +209,7 @@ app.post('/marketing/nekretnine', (req, res) => {
             if (error) {
                 res.status(500).json({ greska: error.message });
             } else {
-                let preference = JSON.parse(data.toString('utf8'));
+                let preference = JSON.parse(data);
                 nizNekretnina.forEach((idNekretnine) => {
                     const existingIndex = preference.find(item => item.id == idNekretnine);
 
@@ -247,7 +247,7 @@ app.post('/marketing/nekretnina/:id', (req, res) => {
             if (error) {
                 res.status(500).json({ greska: error.message });
             } else {
-                const preference = JSON.parse(data.toString('utf8'));
+                const preference = JSON.parse(data);
                 const index = preference.findIndex((item) => item.id == id);
 
                 if (index !== -1) {
