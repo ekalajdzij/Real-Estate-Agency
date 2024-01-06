@@ -1,13 +1,30 @@
-const express = require('express');
+const Sequelize = require('sequelize');
 const bodyParser = require('body-parser');
-const nekretnine = require('./data/nekretnine.json');
-const users = require('./data/korisnici.json');
+const sequelize = require('./public/baza.js');
+const express = require('express');
+const app = express();
+const Nekretnina = require('./public/nekretnine.js')(sequelize);
+const Korisnik = require('./public/korisnici.js')(sequelize);
+const Upit = require('./public/upiti.js')(sequelize);
+const Preferenca = require('./public/preference.js')(sequelize);
+Nekretnina.sync();
+Korisnik.sync();
+Upit.sync();
+Preferenca.sync();
+
+const mysql = require('mysql');
+const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'password',
+    database: 'wt24'
+});
+connection.connect();
+
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const fs = require('fs');
 const path = require('path');
-
-const app = express();
 app.use(express.static(path.join(__dirname)));
 app.use(express.static(path.join(__dirname, 'public/html')));
 app.use(express.json());
@@ -52,45 +69,34 @@ app.get('/MarketingAjax.js', (req, res) => {
 });
 
 
-app.post('/login', (req, res) => {
-    const { username, password } = req.body;
-    fs.readFile('./data/korisnici.json', 'utf-8', async (error, data) => {
-        if (error) {
-            console.log(error);
-            return;
-        }
-        if (data) {
-            let users = JSON.parse(data);
-            var checkVar = false;
-            const loop = async () => {
-                for (let i = 0; i < users.length; i++) {
-                    if (users[i].username === username) {
-                        let match = await bcrypt.compare(password, users[i].password);
-                        if (match) {
-                            checkVar = true;
-                            req.session.user = users[i];
-                            res.status(200).json({ "poruka": "Uspješna prijava" });
-                            return res.end();
-                        } else if (!match) {
-                            checkVar = true;
-                            res.status(401).json({ "greska": "Neuspješna prijava" });
-                            return res.end();
-                        }
-                    }
-                    else continue;
+app.post('/login', async (req, res) => {
+    const {username, password} = req.body;
+    try {
+        const query = 'SELECT * FROM korisniks WHERE username = ?';
+        connection.query(query, [username], async (error, result) => {
+            if (error) {
+                console.error('Error:', err);
+                return;
+            }
+            const user = result[0];
+            if (user) {
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    req.session.user = user;
+                    res.status(200).json({ "poruka": "Uspješna prijava" });
+                } else {
+                    res.status(401).json({ "greska": "Neuspješna prijava" });
                 }
-            }
-            await loop();
-            if (!checkVar) {
+            } else {
                 res.status(401).json({ "greska": "Neuspješna prijava" });
-                return res.end();
             }
-        }
-    });
-});
+        });
+    } catch (error) {
+        return res.status(401).json({ "greska": "Došlo je do greške prilikom izvršavanja upita" });
+    }
+}); 
 
-
-app.post(('/logout'), (req, res) => {
+app.post('/logout', (req, res) => {
     if (req.session && req.session.user) {
         req.session.destroy((error) => {
             if (error) {
@@ -103,28 +109,36 @@ app.post(('/logout'), (req, res) => {
         res.status(401).json({ "greska": "Neautorizovan pristup" });
     }
 });
+
 app.get('/nekretnine', (req, res) => {
-    fs.readFile('./data/nekretnine.json', (error, data) => {
-        if (error) {
-            res.status(500).json({ greska: error.message });
-        } else {
-            const listaNekretnina = JSON.parse(data.toString('utf8'));
-            res.status(200).json(listaNekretnina);
-        }
-    });
+    try {
+        const query = 'SELECT * FROM nekretninas';
+        connection.query(query, (error, results) => {
+            if (error) {
+                res.status(500).json({ greska: error.message });
+            } else {
+                res.status(200).json(results);
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ greska: error.message });
+    }
 });
 
 app.get('/korisnik', (req, res) => {
     if (req.session && req.session.user) {
-        let user = req.session.user;
-        const data = {
-            id: user.id,
-            ime: user.ime,
-            prezime: user.prezime,
-            username: user.username,
-            password: user.password,
-        };
-        res.status(200).json(data);
+        try {
+            const query = 'SELECT * FROM korisniks WHERE username = ?';
+            connection.query(query, [req.session.user.username], (error, results) => {
+                if (error) {
+                    res.status(401).json({ "greska": "Neautorizovan pristup" });
+                } else {
+                    res.status(200).json(results);
+                }
+            });
+        } catch (error) {
+            res.status(401).json({ "greska": "Neautorizovan pristup" });
+        }
     } else {
         res.status(401).json({ "greska": "Neautorizovan pristup" });
     }
@@ -134,143 +148,216 @@ app.post('/upit', (req, res) => {
     if (!req.session || !req.session.user) {
         return res.status(401).json({ "greska": "Neautorizovan pristup" });
     }
-    const user = users.find(user => user.id === req.session.user.id);
+    const user = req.session.user;
     const { nekretnina_id, tekst_upita } = req.body;
-    const nekretnina = nekretnine.find(nekretnina => nekretnina.id === parseInt(nekretnina_id, 10));
-
-    if (!nekretnina) {
-        return res.status(400).json({ "greska": "Nekretnina sa id-em " + nekretnina_id + " ne postoji" });
-    } else {
-        const data = {
-            korisnik_id: user.id,
-            tekst_upita: tekst_upita
+    const queryNekretnina = 'SELECT * FROM nekretninas WHERE id = ?';
+    connection.query(queryNekretnina, [nekretnina_id], (errorNekretnina, resultsNekretnina) => {
+        if (errorNekretnina) {
+            return res.status(500).json({ "greska": "Greška prilikom dohvata nekretnine iz baze podataka" });
         }
-        nekretnina.upiti.push(data);
-        const jsonData = JSON.stringify(nekretnine);
-        fs.writeFile('./data/nekretnine.json', jsonData, 'utf8', (error) => {
-            if (error) {
-                return res.status(500).json({ "greska": "Došlo je do greške prilikom pisanja u datoteku" });
+
+        const nekretnina = resultsNekretnina[0];
+        if (!nekretnina) {
+            return res.status(400).json({ "greska": "Nekretnina sa id-em " + nekretnina_id + " ne postoji" });
+        }
+
+        const queryUpit = 'INSERT INTO upits (tekst_upita, nekretnina_id, korisnik_id) VALUES (?, ?, ?)';
+        connection.query(queryUpit, [tekst_upita, nekretnina_id, user.id], (errorUpit, resultsUpit) => {
+            if (errorUpit) {
+                return res.status(500).json({ "greska": "Greška prilikom dodavanja upita u bazu podataka" });
             } else {
                 return res.status(200).json({ "poruka": "Upit je uspješno dodan" });
             }
         });
-    }
-
+    });
 });
 
 app.put('/korisnik', (req, res) => {
     if (!req.session || !req.session.user) {
         return res.status(401).json({ "greska": "Neautorizovan pristup" });
     }
-    data = req.body;
-    let username = data['username'];
-    let password = data['password'];
-    let ime = data['ime'];
-    let prezime = data['prezime'];
+    const { username, password, ime, prezime } = req.body;
     const userId = req.session.user.id;
-    const index = users.findIndex(user => user.id === userId);
-    if (index === -1) {
-        return res.status(401).json({ "greska": "Neautorizovan pristup" });
-    }
-    if (ime) users[index].ime = ime;
-    if (prezime) users[index].prezime = prezime;
-    if (username) users[index].username = username;
-    if (password) {
-        bcrypt.hash(password, 10, (err, hashedPassword) => {
-            if (err) {
-                console.error('Greška prilikom hasiranja lozinke:', err);
-                return;
-            }
-            users[index].password = hashedPassword;
-            fs.writeFile('./data/korisnici.json', JSON.stringify(users), 'utf8', (error) => {
-                if (error) {
-                    return res.status(500).json({ "greska": "Došlo je do greške prilikom pisanja u datoteku" });
+
+    const query = 'SELECT * FROM korisniks WHERE id = ?';
+    connection.query(query, [userId], (error, results) => {
+        if (error) {
+            return res.status(500).json({ "greska": "Greška prilikom dohvata korisnika iz baze podataka" });
+        }
+
+        if (results.length === 0) {
+            return res.status(401).json({ "greska": "Neautorizovan pristup" });
+        }
+
+        const user = results[0];
+
+        let updateQuery = 'UPDATE korisniks SET ';
+        let params = [];
+
+        if (ime) {
+            updateQuery += 'ime = ?, ';
+            params.push(ime);
+        }
+        if (prezime) {
+            updateQuery += 'prezime = ?, ';
+            params.push(prezime);
+        }
+        if (username) {
+            updateQuery += 'username = ?, ';
+            params.push(username);
+        }
+        if (password) {
+            bcrypt.hash(password, 10, (err, hashedPassword) => {
+                if (err) {
+                    console.error('Greška prilikom hasiranja lozinke:', err);
+                    return res.status(500).json({ "greska": "Došlo je do greške prilikom spašavanja." });
+                }
+                updateQuery += 'password = ?, ';
+                params.push(hashedPassword);
+                updateQuery = updateQuery.slice(0, -2);
+                updateQuery += ' WHERE id = ?';
+                params.push(userId);
+
+                connection.query(updateQuery, params, (errorUpdate, resultsUpdate) => {
+                    if (errorUpdate) {
+                        return res.status(500).json({ "greska": "Došlo je do greške prilikom ažuriranja." });
+                    } else {
+                        return res.status(200).json({ "poruka": "Podaci su uspješno ažurirani" });
+                    }
+                });
+            });
+        } else {
+            updateQuery = updateQuery.slice(0, -2);
+            updateQuery += ' WHERE id = ?';
+            params.push(userId);
+
+            connection.query(updateQuery, params, (errorUpdate, resultsUpdate) => {
+                if (errorUpdate) {
+                    return res.status(500).json({ "greska": "Došlo je do greške prilikom ažuriranja." });
                 } else {
                     return res.status(200).json({ "poruka": "Podaci su uspješno ažurirani" });
                 }
             });
-        });
-    } else {
-        fs.writeFile('./data/korisnici.json', JSON.stringify(users), 'utf8', (error) => {
-            if (error) {
-                return res.status(500).json({ "greska": "Došlo je do interne greške prilikom pisanja u datoteku" });
-            } else {
-                return res.status(200).json({ "poruka": "Podaci su uspješno ažurirani" });
-            }
-        });
-    }
+        }
+    });
 });
 
 
+app.get('/upiti/:nekretninaId', (req, res) => {
+    const nekretninaId = req.params.nekretninaId;
+    const query = `
+        SELECT upits.*, korisniks.username
+        FROM upits
+        INNER JOIN korisniks ON upits.korisnik_id = korisniks.id
+        WHERE upits.nekretnina_id = ?;
+    `;
+    connection.query(query, [nekretninaId], (error, results) => {
+        if (error) {
+            console.error('Greška prilikom dohvata upita:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+            res.status(200).json(results);
+        }
+    });
+});
+
+
+app.get('/nekretnina/:id', (req, res) => {
+    const id = req.params.id;
+    const query = 'SELECT * FROM nekretninas WHERE id = ?';
+    connection.query(query, [id], (error, results) => {
+        if (results.length == 0) return res.status(400).json({ greska: `Nekretnina sa ID-em ${id} ne postoji` });
+        const detalji = results[0];
+        res.status(200).json(detalji);
+    });
+});
+
 app.post('/marketing/nekretnine', (req, res) => {
-    try {
+    try  {
         const { nizNekretnina } = req.body;
-        fs.readFile('./data/preference.json', (error, data) => {
+        connection.query('SELECT * FROM preferencas', (error, results) => {
             if (error) {
-                res.status(500).json({ greska: error.message });
-            } else {
-                let preference = JSON.parse(data);
-                nizNekretnina.forEach((idNekretnine) => {
-                    const existingIndex = preference.find(item => item.id == idNekretnine);
-
-                    if (existingIndex != null) {
-                        existingIndex.pretrage++;
-                    } else {
-                        preference.push({
-                            id: idNekretnine,
-                            klikovi: 0,
-                            pretrage: 1
-                        });
-                    }
-                    
-
-                });
-                fs.writeFile('./data/preference.json', JSON.stringify(preference), 'utf8', (writeError) => {
-                    if (writeError) {
-                        return res.status(500).json({ "greska": "Došlo je do interne greške prilikom pisanja u datoteku" });
-                    } else {
-                        return res.status(200).send();
-                    }
-                });
+                return res.status(500).json({ "greska": error.message });
             }
+            let preference = results;
+
+            nizNekretnina.forEach((idNekretnine) => {
+                const existingIndex = preference.find(item => item.id == idNekretnine);
+                if (existingIndex != null) {
+                    existingIndex.pretrage++;
+                    connection.query('UPDATE preferencas SET pretrage = ? WHERE nekretnina_id = ?', [existingIndex.pretrage, idNekretnine], (updateError, updateResults) => {
+                        if (updateError) {
+                            return res.status(500).json({ "greska": updateError.message });
+                        }
+                    });
+                } else {
+                    let nekretninaExists = false;
+                    connection.query('SELECT * FROM nekretninas WHERE id = ?', idNekretnine, (error, results) => {
+                        if (results.length > 0) nekretninaExists = true;
+                        let id = 0;
+                        if (nekretninaExists) {
+                            connection.query('SELECT MAX(id) AS maxId FROM preferencas', (maxIdError, maxIdResult) => {
+                                id = maxIdResult[0].maxId + 1;
+                                const query = 'INSERT INTO preferencas (id, nekretnina_id, pretrage, klikovi) VALUES (?, ?, 1, 0)'
+                                connection.query(query, [id, idNekretnine], (insertError, results) => {
+                                    if (insertError) {
+                                        return res.status(500).json({ "greska": insertError.message });
+                                    }
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+            return res.status(200).send();
         });
-        
     } catch (error) {
         console.error('Error:', error);
+        return res.status(500).json({ "greska": "Došlo je do interne greške" });
     }
 });
 
 app.post('/marketing/nekretnina/:id', (req, res) => {
     try {
-        const id = JSON.parse(req.params.id);
-        fs.readFile('./data/preference.json', (error, data) => {
-            if (error) {
-                res.status(500).json({ greska: error.message });
-            } else {
-                const preference = JSON.parse(data);
-                const index = preference.findIndex((item) => item.id == id);
+        const idNekretnine = JSON.parse(req.params.id);
+        connection.query('SELECT * FROM nekretninas WHERE id = ?', idNekretnine, (selectError, selectResults) => {
+            if (selectError) {
+                return res.status(500).json({ "greska": selectError.message });
+            }
+            if (selectResults.length === 0) {
+                return res.status(404).json({ "greska": "Nekretnina sa datim ID-om ne postoji." });
+            }
+            connection.query('SELECT * FROM preferencas WHERE nekretnina_id = ?', idNekretnine, (error, results) => {
+                if (error) {
+                    return res.status(500).json({ "greska": error.message });
+                }
 
-                if (index !== -1) {
-                    preference[index].klikovi = (preference[index].klikovi) + 1;
+                const preference = results.length > 0 ? results[0] : null;
+
+                if (preference) {
+                    connection.query('UPDATE preferencas SET klikovi = klikovi + 1 WHERE nekretnina_id = ?', idNekretnine, (updateError) => {
+                        if (updateError) {
+                            return res.status(500).json({ "greska": updateError.message });
+                        }
+                        return res.status(200).send();
+                    });
                 } else {
-                    preference.push({
-                        id: id,
-                        klikovi: 1,
-                        pretrage: 0
+                    connection.query('SELECT MAX(id) AS maxId FROM preferencas', (maxIdError, maxIdResult) => {
+                        const nextId = maxIdResult[0].maxId + 1;
+                        const query = 'INSERT INTO preferencas (id, nekretnina_id, klikovi, pretrage) VALUES (?, ?, 1, 0)';
+                        connection.query(query, [nextId, idNekretnine], (insertError) => {
+                            if (insertError) {
+                                return res.status(500).json({ "greska": insertError.message });
+                            }
+                            return res.status(200).send();
+                        });
                     });
                 }
-                fs.writeFile('./data/preference.json', JSON.stringify(preference), 'utf8', (writeError) => {
-                    if (writeError) {
-                        return res.status(500).json({ "greska": "Došlo je do interne greške prilikom pisanja u datoteku" });
-                    } else {
-                        return res.status(200).send();
-                    }
-                });
-            }
-
+            });
         });
     } catch (error) {
         console.error('Error:', error);
+        return res.status(500).json({ "greska": "Došlo je do interne greške" });
     }
 });
 
@@ -278,48 +365,44 @@ let preferenceStaro = [{}];
 let preference = [];
 let changes = [];
 app.post('/marketing/osvjezi', (req, res) => {
-
     if (Object.keys(req.body).length !== 0) { // ima body
         const nizNekretnina = req.body.nizNekretnina;
         if (nizNekretnina.length == 1) {
             req.session.osvjezavajJednu = nizNekretnina[0];
-            req.session.prviPut	= true;
+            req.session.prviPut = true;
         } else {
             req.session.osvjezavajJednu = null;
             req.session.prviPut = true;
         }
-        
-       
-        fs.readFile('./data/preference.json', (error, data) => {
+
+        connection.query('SELECT * FROM preferencas', (error, results) => {
             if (error) {
-                res.status(500).json({ greska: error.message });
-            } else {
-                preference = JSON.parse(data);
-                changes = findChanges(preferenceStaro, preference);
-                preferenceStaro = preference;
-                res.status(200).send({ nizNekretnina: changes });
+                return res.status(500).json({ "greska": error.message });
             }
-        })
-    } else {    //nema body
-        fs.readFile('./data/preference.json', (error, data) => {
+            preference = results;
+            changes = findChanges(preferenceStaro, preference);
+            preferenceStaro = preference;
+            res.status(200).send({ nizNekretnina: changes });
+        });
+    } else { // nema body
+        connection.query('SELECT * FROM preferencas', (error, results) => {
             if (error) {
-                res.status(500).json({ greska: error.message });
-            } else {
-                preference = JSON.parse(data);
-                changes = findChanges(preferenceStaro, preference);
-                if (req.session.prviPut != false) {
-                    changes = preference;
-                    req.session.prviPut = 1;
-                } else {
-                    changes = findChanges(preferenceStaro, preference);
-                }
-                if (req.session.osvjezavajJednu != null) {
-                    changes = changes.some(item => item.id == req.session.osvjezavajJednu)
-                }
-                preferenceStaro = preference;
-                res.status(200).send({ nizNekretnina: changes });
+                return res.status(500).json({ "greska": error.message });
             }
-        })
+            preference = results;
+            changes = findChanges(preferenceStaro, preference);
+            if (req.session.prviPut != false) {
+                changes = preference;
+                req.session.prviPut = 1;
+            } else {
+                changes = findChanges(preferenceStaro, preference);
+            }
+            if (req.session.osvjezavajJednu != null) {
+                changes = changes.some(item => item.id == req.session.osvjezavajJednu);
+            }
+            preferenceStaro = preference;
+            return res.status(200).send({ nizNekretnina: changes });
+        });
     }
 });
 
@@ -327,25 +410,24 @@ function findChanges(oldArray, newArray) {
     const changes = [];
 
     newArray.forEach((newObj) => {
-        const oldObj = oldArray.find((obj) => obj.id == newObj.id);
+        const oldObj = oldArray.find((obj) => obj.nekretnina_id == newObj.nekretnina_id);
 
         if (oldObj && (oldObj.klikovi != newObj.klikovi || oldObj.pretrage != newObj.pretrage)) {
             changes.push({
-                id: newObj.id,
+                id: newObj.nekretnina_id,
                 klikovi: newObj.klikovi,
                 pretrage: newObj.pretrage
-            })
+            });
         }
         if (!oldObj) {
             changes.push({
-                id: newObj.id,
+                id: newObj.nekretnina_id,
                 klikovi: newObj.klikovi,
                 pretrage: newObj.pretrage
-            })
+            });
         }
     });
 
     return changes;
 }
-
 app.listen(3000);

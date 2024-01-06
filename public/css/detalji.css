@@ -40,7 +40,19 @@ h3 {
     margin-bottom: 15px;
 }
 
+#postaviUpit {
+    text-align: center;
+}
 
+#tekstUpita {
+    width: 500px;
+    height: 75px;
+    margin-right: 25px;
+}
+
+#posaljiUpit {
+    width: 100px;
+}
 
 #upiti {
     padding: 20px; 

@@ -94,29 +94,49 @@ function spojiNekretnine(divReferenca, instancaModula, tip_nekretnine) {
             <div class="property-name">${nekretnina.naziv}</div>
             <div class="property-area">Kvadratura: ${nekretnina.kvadratura} m2</div>
             <div class="property-price">Cijena: ${nekretnina.cijena} BAM</div>
+            <div class="property-location" id="location"></div>
+            <div class="property-year" id="year"></div>
             <div class="property-clicks" id = "klikovi-${nekretnina.id}"></div>
             <div class="property-searches" id = "pretrage-${nekretnina.id}"></div>
             <button type="button" onclick="klikDetalji(${nekretnina.id})">Detalji</button>
+            <button type="button" onclick="otvoriDetalje(${nekretnina.id})" style="visibility: hidden">Otvori detalje</button>
         </div>
         `;
 
         propertyList.appendChild(nekretninaElement);
     });
 }
+function otvoriDetalje(nekretninaId) {
+    window.location.href = `detalji.html?nekretninaId=${nekretninaId}`;
+}
+
+
 let previousClickedElement = null;
 function klikDetalji(nekretninaId) {
     MarketingAjax.klikNekretnina(nekretninaId);
-    const propertyList = document.querySelector('.property-list');
-    const clickedPropertyElement = document.getElementById(nekretninaId);
-    if (propertyList && clickedPropertyElement) {
-        if (previousClickedElement) {
-            propertyList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(500px, 1fr))';
-            propertyList.style.gap = '20px';
-            previousClickedElement.style.width = '300px'
+    PoziviAjax.getDetalji(nekretninaId, (errorNekretnine, detaljiNekretnine) => {
+        if (errorNekretnine) {
+            console.error('Greška prilikom dohvata nekretnina:', error);
+            return;
         }
-        propertyList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(500px, 1fr))';
-        clickedPropertyElement.style.width = '500px';
-        propertyList.style.gap = '20px';
-        previousClickedElement = clickedPropertyElement;
-    }
+        const propertyList = document.querySelector('.property-list');
+        const clickedPropertyElement = document.getElementById(nekretninaId);
+        if (propertyList && clickedPropertyElement) {
+            if (previousClickedElement) {
+                propertyList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(500px, 1fr))';
+                propertyList.style.gap = '20px';
+                previousClickedElement.style.width = '300px'
+            }
+            propertyList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(500px, 1fr))';
+            clickedPropertyElement.style.width = '500px';
+            propertyList.style.gap = '20px';
+            const lokacijaElement = clickedPropertyElement.querySelector('.property-location');
+            const godinaElement = clickedPropertyElement.querySelector('.property-year');
+            const detaljiButton = clickedPropertyElement.querySelector('button[type="button"][onclick*="otvoriDetalje"]');
+            if (detaljiButton) detaljiButton.style.visibility = 'visible';
+            if (lokacijaElement) lokacijaElement.innerHTML = `Lokacija: ${detaljiNekretnine.lokacija}`;
+            if (godinaElement) godinaElement.innerHTML = `Godina izgradnje: ${detaljiNekretnine.godina_izgradnje}`;
+            previousClickedElement = clickedPropertyElement;
+        }
+    });
 }

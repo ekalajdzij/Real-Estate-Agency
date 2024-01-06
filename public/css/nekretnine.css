@@ -82,6 +82,21 @@ iframe {
     margin: 10px 10px;
 }
 
+.property-year,
+.property-location {
+    text-align: left;
+    width: 90%;
+}
+
+.property-location::before,
+.property-year::before {
+    content: ""; /* Dodajte ovo da biste obrisali pseudoelemente koji čiste izgleda */
+    display: block; 
+    height: 0; 
+    clear: both; 
+}
+
+
 .property-name {
     font-weight: bold;
     width: 90%;
