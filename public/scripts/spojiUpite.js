@@ -17,6 +17,7 @@ function posaljiUpit() {
             alert('Došlo je do greške prilikom slanja upita. Pokušajte ponovo.');
         } else {
             alert('Upit uspješno poslan!');
+            location.reload();
         }
     });
 }
