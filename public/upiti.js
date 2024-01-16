@@ -10,7 +10,6 @@ module.exports = function (sequelize, DataTypes) {
         tekst_upita: Sequelize.STRING,
         nekretnina_id: {
             type: Sequelize.INTEGER,
-            allowNull: false,
             references: {
                 model: 'nekretninas',
                 key: 'id'
@@ -18,7 +17,6 @@ module.exports = function (sequelize, DataTypes) {
         },
         korisnik_id: {
             type: Sequelize.INTEGER,
-            allowNull: false,
             references: {
                 model: 'korisniks',
                 key: 'id'

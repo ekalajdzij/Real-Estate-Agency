@@ -8,7 +8,6 @@ module.exports = function (sequelize, DataTypes) {
         },
         nekretnina_id: {
             type: Sequelize.INTEGER,
-            allowNull: false,
             references: {
                 model: 'nekretninas',
                 key: 'id'

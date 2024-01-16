@@ -1,17 +1,17 @@
 const Sequelize = require('sequelize');
 const bodyParser = require('body-parser');
 const sequelize = require('./public/baza.js');
+
+sequelize.sequelize.sync({ force: true })
+    .then(() => {
+        require('./public/priprema.js');
+    })
+    .catch((error) => {
+        console.error('Greška prilikom sync operacije:', error);
+    });
+//require('./public/priprema.js');
 const express = require('express');
 const app = express();
-const Nekretnina = require('./public/nekretnine.js')(sequelize);
-const Korisnik = require('./public/korisnici.js')(sequelize);
-const Upit = require('./public/upiti.js')(sequelize);
-const Preferenca = require('./public/preference.js')(sequelize);
-Nekretnina.sync();
-Korisnik.sync();
-Upit.sync();
-Preferenca.sync();
-
 const mysql = require('mysql');
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -20,7 +20,6 @@ const connection = mysql.createConnection({
     database: 'wt24'
 });
 connection.connect();
-
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const fs = require('fs');
@@ -68,34 +67,26 @@ app.get('/MarketingAjax.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'MarketingAjax.js'));
 });
 
-
 app.post('/login', async (req, res) => {
     const {username, password} = req.body;
     try {
-        const query = 'SELECT * FROM korisniks WHERE username = ?';
-        connection.query(query, [username], async (error, result) => {
-            if (error) {
-                console.error('Error:', err);
-                return;
-            }
-            const user = result[0];
-            if (user) {
-                const match = await bcrypt.compare(password, user.password);
-                if (match) {
-                    req.session.user = user;
-                    res.status(200).json({ "poruka": "Uspješna prijava" });
-                } else {
-                    res.status(401).json({ "greska": "Neuspješna prijava" });
-                }
-            } else {
-                res.status(401).json({ "greska": "Neuspješna prijava" });
-            }
-        });
-    } catch (error) {
-        return res.status(401).json({ "greska": "Došlo je do greške prilikom izvršavanja upita" });
+        const users = await sequelize.Korisnik.findAll({where: {username: username}});
+        if (users.length > 0) {
+          const user = users[0];
+          const match = await bcrypt.compare(password, user.password);
+          if (match) {
+                req.session.user = user;
+                res.status(200).json({ "poruka": 'Uspješna prijava' });
+          } else {
+                res.status(401).json({ "greska": 'Neuspješna prijava' });
+          }
+        } else {
+                res.status(401).json({ "greska": 'Neuspješna prijava' });
+        }
+      } catch (error) {
+            return res.status(401).json({ "greska": 'Došlo je do greške prilikom izvršavanja upita' });
     }
-}); 
-
+});
 app.post('/logout', (req, res) => {
     if (req.session && req.session.user) {
         req.session.destroy((error) => {
@@ -110,261 +101,175 @@ app.post('/logout', (req, res) => {
     }
 });
 
-app.get('/nekretnine', (req, res) => {
+app.get('/nekretnine', async (req, res) => {
     try {
-        const query = 'SELECT * FROM nekretninas';
-        connection.query(query, (error, results) => {
-            if (error) {
-                res.status(500).json({ greska: error.message });
-            } else {
-                res.status(200).json(results);
-            }
-        });
+        const nekretnine = await sequelize.Nekretnina.findAll();
+        res.status(200).json(nekretnine);
     } catch (error) {
-        res.status(500).json({ greska: error.message });
+        res.status(500).json({ "greska": error.message });
     }
 });
 
-app.get('/korisnik', (req, res) => {
+app.get('/korisnik', async (req, res) => {
     if (req.session && req.session.user) {
         try {
-            const query = 'SELECT * FROM korisniks WHERE username = ?';
-            connection.query(query, [req.session.user.username], (error, results) => {
-                if (error) {
-                    res.status(401).json({ "greska": "Neautorizovan pristup" });
-                } else {
-                    res.status(200).json(results);
-                }
-            });
+          const user = await sequelize.Korisnik.findOne({where: {username: req.session.user.username}});
+          if (user) {
+            res.status(200).json(user);
+          } else {
+            res.status(401).json({ "greska": 'Neautorizovan pristup' });
+          }
         } catch (error) {
-            res.status(401).json({ "greska": "Neautorizovan pristup" });
+          res.status(401).json({ "greska": 'Neautorizovan pristup' });
         }
-    } else {
-        res.status(401).json({ "greska": "Neautorizovan pristup" });
-    }
+      } else {
+        res.status(401).json({ "greska": 'Neautorizovan pristup' });
+      }
 });
 
-app.post('/upit', (req, res) => {
+app.post('/upit', async (req, res) => {
     if (!req.session || !req.session.user) {
-        return res.status(401).json({ "greska": "Neautorizovan pristup" });
-    }
-    const user = req.session.user;
-    const { nekretnina_id, tekst_upita } = req.body;
-    const queryNekretnina = 'SELECT * FROM nekretninas WHERE id = ?';
-    connection.query(queryNekretnina, [nekretnina_id], (errorNekretnina, resultsNekretnina) => {
-        if (errorNekretnina) {
-            return res.status(500).json({ "greska": "Greška prilikom dohvata nekretnine iz baze podataka" });
-        }
+        return res.status(401).json({ greska: 'Neautorizovan pristup' });
+      }
+      const user = req.session.user;
+      const { nekretnina_id, tekst_upita } = req.body;
 
-        const nekretnina = resultsNekretnina[0];
+      try {
+        const nekretnina = await sequelize.Nekretnina.findOne({where: {id: nekretnina_id,}});
         if (!nekretnina) {
-            return res.status(400).json({ "greska": "Nekretnina sa id-em " + nekretnina_id + " ne postoji" });
+          return res.status(400).json({ "greska": 'Nekretnina sa id-em ' + nekretnina_id + ' ne postoji' });
         }
-
-        const queryUpit = 'INSERT INTO upits (tekst_upita, nekretnina_id, korisnik_id) VALUES (?, ?, ?)';
-        connection.query(queryUpit, [tekst_upita, nekretnina_id, user.id], (errorUpit, resultsUpit) => {
-            if (errorUpit) {
-                return res.status(500).json({ "greska": "Greška prilikom dodavanja upita u bazu podataka" });
-            } else {
-                return res.status(200).json({ "poruka": "Upit je uspješno dodan" });
-            }
+        await sequelize.Upit.create({
+          tekst_upita: tekst_upita,
+          nekretnina_id: nekretnina_id,
+          korisnik_id: user.id,
         });
-    });
+        return res.status(200).json({ "poruka": 'Upit je uspješno dodan' });
+
+        } catch (error) {
+            return res.status(500).json({ "greska": 'Greška prilikom dodavanja upita u bazu podataka' });
+        }
 });
 
-app.put('/korisnik', (req, res) => {
+app.put('/korisnik', async (req, res) => {
     if (!req.session || !req.session.user) {
-        return res.status(401).json({ "greska": "Neautorizovan pristup" });
-    }
-    const { username, password, ime, prezime } = req.body;
-    const userId = req.session.user.id;
-
-    const query = 'SELECT * FROM korisniks WHERE id = ?';
-    connection.query(query, [userId], (error, results) => {
-        if (error) {
-            return res.status(500).json({ "greska": "Greška prilikom dohvata korisnika iz baze podataka" });
+        return res.status(401).json({ "greska": 'Neautorizovan pristup' });
+      }
+    
+      const { username, password, ime, prezime } = req.body;
+      const userId = req.session.user.id;
+    
+      try {
+        const user = await sequelize.Korisnik.findByPk(userId);
+        if (!user) {
+          return res.status(401).json({ "greska": 'Neautorizovan pristup' });
         }
-
-        if (results.length === 0) {
-            return res.status(401).json({ "greska": "Neautorizovan pristup" });
-        }
-
-        const user = results[0];
-
-        let updateQuery = 'UPDATE korisniks SET ';
-        let params = [];
-
         if (ime) {
-            updateQuery += 'ime = ?, ';
-            params.push(ime);
+          user.ime = ime;
         }
         if (prezime) {
-            updateQuery += 'prezime = ?, ';
-            params.push(prezime);
+          user.prezime = prezime;
         }
         if (username) {
-            updateQuery += 'username = ?, ';
-            params.push(username);
+          user.username = username;
         }
         if (password) {
-            bcrypt.hash(password, 10, (err, hashedPassword) => {
-                if (err) {
-                    console.error('Greška prilikom hasiranja lozinke:', err);
-                    return res.status(500).json({ "greska": "Došlo je do greške prilikom spašavanja." });
-                }
-                updateQuery += 'password = ?, ';
-                params.push(hashedPassword);
-                updateQuery = updateQuery.slice(0, -2);
-                updateQuery += ' WHERE id = ?';
-                params.push(userId);
-
-                connection.query(updateQuery, params, (errorUpdate, resultsUpdate) => {
-                    if (errorUpdate) {
-                        return res.status(500).json({ "greska": "Došlo je do greške prilikom ažuriranja." });
-                    } else {
-                        return res.status(200).json({ "poruka": "Podaci su uspješno ažurirani" });
-                    }
-                });
-            });
+          const hashedPassword = await bcrypt.hash(password, 10);
+          user.password = hashedPassword;
+            await user.save();
         } else {
-            updateQuery = updateQuery.slice(0, -2);
-            updateQuery += ' WHERE id = ?';
-            params.push(userId);
-
-            connection.query(updateQuery, params, (errorUpdate, resultsUpdate) => {
-                if (errorUpdate) {
-                    return res.status(500).json({ "greska": "Došlo je do greške prilikom ažuriranja." });
-                } else {
-                    return res.status(200).json({ "poruka": "Podaci su uspješno ažurirani" });
-                }
-            });
+            await user.save();
         }
+        return res.status(200).json({ "poruka": 'Podaci su uspješno ažurirani' });
+      } catch (error) {
+        return res.status(500).json({ "greska": 'Došlo je do greške prilikom ažuriranja.' });
+      }
     });
-});
 
-
-app.get('/upiti/:nekretninaId', (req, res) => {
+app.get('/upiti/:nekretninaId', async (req, res) => {
     const nekretninaId = req.params.nekretninaId;
-    const query = `
-        SELECT upits.*, korisniks.username
-        FROM upits
-        INNER JOIN korisniks ON upits.korisnik_id = korisniks.id
-        WHERE upits.nekretnina_id = ?;
-    `;
-    connection.query(query, [nekretninaId], (error, results) => {
-        if (error) {
-            console.error('Greška prilikom dohvata upita:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        } else {
-            res.status(200).json(results);
-        }
-    });
-});
-
-
-app.get('/nekretnina/:id', (req, res) => {
-    const id = req.params.id;
-    const query = 'SELECT * FROM nekretninas WHERE id = ?';
-    connection.query(query, [id], (error, results) => {
-        if (results.length == 0) return res.status(400).json({ greska: `Nekretnina sa ID-em ${id} ne postoji` });
-        const detalji = results[0];
-        res.status(200).json(detalji);
-    });
-});
-
-app.post('/marketing/nekretnine', (req, res) => {
-    try  {
-        const { nizNekretnina } = req.body;
-        connection.query('SELECT * FROM preferencas', (error, results) => {
-            if (error) {
-                return res.status(500).json({ "greska": error.message });
-            }
-            let preference = results;
-
-            nizNekretnina.forEach((idNekretnine) => {
-                const existingIndex = preference.find(item => item.id == idNekretnine);
-                if (existingIndex != null) {
-                    existingIndex.pretrage++;
-                    connection.query('UPDATE preferencas SET pretrage = ? WHERE nekretnina_id = ?', [existingIndex.pretrage, idNekretnine], (updateError, updateResults) => {
-                        if (updateError) {
-                            return res.status(500).json({ "greska": updateError.message });
-                        }
-                    });
-                } else {
-                    let nekretninaExists = false;
-                    connection.query('SELECT * FROM nekretninas WHERE id = ?', idNekretnine, (error, results) => {
-                        if (results.length > 0) nekretninaExists = true;
-                        let id = 0;
-                        if (nekretninaExists) {
-                            connection.query('SELECT MAX(id) AS maxId FROM preferencas', (maxIdError, maxIdResult) => {
-                                id = maxIdResult[0].maxId + 1;
-                                const query = 'INSERT INTO preferencas (id, nekretnina_id, pretrage, klikovi) VALUES (?, ?, 1, 0)'
-                                connection.query(query, [id, idNekretnine], (insertError, results) => {
-                                    if (insertError) {
-                                        return res.status(500).json({ "greska": insertError.message });
-                                    }
-                                });
-                            });
-                        }
-                    });
-                }
-            });
-            return res.status(200).send();
-        });
+    try {
+        const upiti = await sequelize.Upit.findAll({where: {nekretnina_id: nekretninaId}, include: {model: sequelize.Korisnik, attributes: ['username']}});
+        res.status(200).json(upiti);
     } catch (error) {
-        console.error('Error:', error);
-        return res.status(500).json({ "greska": "Došlo je do interne greške" });
+        res.status(500).json({ "greska": 'Internal Server Error' });
     }
 });
 
-app.post('/marketing/nekretnina/:id', (req, res) => {
+app.get('/nekretnina/:id', async (req, res) => {
+    const id = req.params.id
+        const nekretnina = await sequelize.Nekretnina.findByPk(id);
+        if (!nekretnina) {
+          return res.status(400).json({ "greska": `Nekretnina sa ID-em ${id} ne postoji` });
+        }
+        res.status(200).json(nekretnina);
+});
+
+app.post('/marketing/nekretnine', async (req, res) => {
+    try {
+        const { nizNekretnina } = req.body;
+        const preference = await sequelize.Preferenca.findAll();
+    
+        for (const idNekretnine of nizNekretnina) {
+            const existingIndex = preference.find(item => item.nekretnina_id === idNekretnine);
+    
+          if (existingIndex) {
+            existingIndex.pretrage++;
+            await existingIndex.save();
+          } else {
+                const nekretninaExists = await sequelize.Nekretnina.findByPk(idNekretnine);
+            if (nekretninaExists) {
+                const maxIdResult = await sequelize.Preferenca.max('id');
+                const id = maxIdResult + 1;
+
+              await sequelize.Preferenca.create({
+                id: id,
+                nekretnina_id: idNekretnine,
+                pretrage: 1,
+                klikovi: 0,
+              });
+            }
+          }
+        }
+        return res.status(200).send();
+      } catch (error) {
+        return res.status(500).json({ "greska": "Došlo je do interne greške" });
+      }
+});
+
+app.post('/marketing/nekretnina/:id', async (req, res) => {
     try {
         const idNekretnine = JSON.parse(req.params.id);
-        connection.query('SELECT * FROM nekretninas WHERE id = ?', idNekretnine, (selectError, selectResults) => {
-            if (selectError) {
-                return res.status(500).json({ "greska": selectError.message });
-            }
-            if (selectResults.length === 0) {
-                return res.status(404).json({ "greska": "Nekretnina sa datim ID-om ne postoji." });
-            }
-            connection.query('SELECT * FROM preferencas WHERE nekretnina_id = ?', idNekretnine, (error, results) => {
-                if (error) {
-                    return res.status(500).json({ "greska": error.message });
-                }
+        const nekretnina = await sequelize.Nekretnina.findByPk(idNekretnine);
+    
+        if (!nekretnina) {
+          return res.status(404).json({ "greska": "Nekretnina sa datim ID-ijem ne postoji." });
+        }
+        let preference = await sequelize.Preferenca.findOne({ where: { nekretnina_id: idNekretnine } });
+        if (preference) {
+            preference.klikovi++;
+            await preference.save();
+        } else {
+          const maxIdResult = await sequelize.Preferenca.max('id');
+          const id = maxIdResult + 1;
+          preference = await sequelize.Preferenca.create({
+            id: id,
+            nekretnina_id: idNekretnine,
+            klikovi: 1,
+            pretrage: 0,
+          });
+        }
 
-                const preference = results.length > 0 ? results[0] : null;
-
-                if (preference) {
-                    connection.query('UPDATE preferencas SET klikovi = klikovi + 1 WHERE nekretnina_id = ?', idNekretnine, (updateError) => {
-                        if (updateError) {
-                            return res.status(500).json({ "greska": updateError.message });
-                        }
-                        return res.status(200).send();
-                    });
-                } else {
-                    connection.query('SELECT MAX(id) AS maxId FROM preferencas', (maxIdError, maxIdResult) => {
-                        const nextId = maxIdResult[0].maxId + 1;
-                        const query = 'INSERT INTO preferencas (id, nekretnina_id, klikovi, pretrage) VALUES (?, ?, 1, 0)';
-                        connection.query(query, [nextId, idNekretnine], (insertError) => {
-                            if (insertError) {
-                                return res.status(500).json({ "greska": insertError.message });
-                            }
-                            return res.status(200).send();
-                        });
-                    });
-                }
-            });
-        });
-    } catch (error) {
-        console.error('Error:', error);
+        return res.status(200).send();
+      } catch (error) {
         return res.status(500).json({ "greska": "Došlo je do interne greške" });
-    }
+      }
 });
 
 let preferenceStaro = [{}];
 let preference = [];
 let changes = [];
-app.post('/marketing/osvjezi', (req, res) => {
+app.post('/marketing/osvjezi', async (req, res) => {
     if (Object.keys(req.body).length !== 0) { // ima body
         const nizNekretnina = req.body.nizNekretnina;
         if (nizNekretnina.length == 1) {
@@ -374,35 +279,24 @@ app.post('/marketing/osvjezi', (req, res) => {
             req.session.osvjezavajJednu = null;
             req.session.prviPut = true;
         }
-
-        connection.query('SELECT * FROM preferencas', (error, results) => {
-            if (error) {
-                return res.status(500).json({ "greska": error.message });
-            }
-            preference = results;
-            changes = findChanges(preferenceStaro, preference);
-            preferenceStaro = preference;
-            res.status(200).send({ nizNekretnina: changes });
-        });
+        const preference = await sequelize.Preferenca.findAll();
+        changes = findChanges(preferenceStaro, preference);
+        preferenceStaro = preference;
+        res.status(200).send({ nizNekretnina: changes });
     } else { // nema body
-        connection.query('SELECT * FROM preferencas', (error, results) => {
-            if (error) {
-                return res.status(500).json({ "greska": error.message });
-            }
-            preference = results;
+        preference = await sequelize.Preferenca.findAll();
+        changes = findChanges(preferenceStaro, preference);
+        if (req.session.prviPut != false) {
+            changes = preference;
+            req.session.prviPut = 1;
+        } else {
             changes = findChanges(preferenceStaro, preference);
-            if (req.session.prviPut != false) {
-                changes = preference;
-                req.session.prviPut = 1;
-            } else {
-                changes = findChanges(preferenceStaro, preference);
-            }
-            if (req.session.osvjezavajJednu != null) {
-                changes = changes.some(item => item.id == req.session.osvjezavajJednu);
-            }
-            preferenceStaro = preference;
-            return res.status(200).send({ nizNekretnina: changes });
-        });
+        }
+        if (req.session.osvjezavajJednu != null) {
+            changes = changes.some(item => item.id == req.session.osvjezavajJednu);
+        }
+        preferenceStaro = preference;
+        return res.status(200).send({ nizNekretnina: changes });   
     }
 });
 

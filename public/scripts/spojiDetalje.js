@@ -39,7 +39,7 @@ PoziviAjax.getDetalji(nekretninaId, (error, dataDetalji) => {
         if (dataUpiti && dataUpiti.length > 0) {
             const upitiList = dataUpiti.map(upit => `
                 <li>
-                    <p><strong>${upit.username}</strong></p>
+                    <p><strong>${upit.Korisnik.username}</strong></p>
                     <p>${upit.tekst_upita}</p>
                 </li>
             `).join('');
